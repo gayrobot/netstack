@@ -14,6 +14,14 @@ Template:
 - Approved by / when:
 ```
 
+## 2026-10-26: Daily gateway backups to the NAS
+- Status: approved 2026-10-26 (design in [gateway-backups.md](gateway-backups.md)); building
+- Target: gateway (new backup account; auto-backup weekly → daily), NAS (share, two users, immutable snapshots, scheduled job)
+- Why: the only gateway backups are stored on the gateway itself; change windows need a verified off-box restore point
+- Diff: see the build order in gateway-backups.md; the gateway auto-backup schedule `30 0 * * 0` → `30 0 * * *`, max files unchanged
+- Rollback: disable the NAS task; set the auto-backup schedule back to weekly; the share and snapshots can stay
+- Approved by / when: owner, in chat, 2026-10-26 (design; each device step still runs as its own step)
+
 ## 2026-10-26: Disable stale WAN port forwards to the NAS
 - Status: proposed
 - Target: gateway, two port-forward rules to the NAS
