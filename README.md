@@ -121,4 +121,8 @@ private/                  gitignored: real names, raw dumps, denylist, configs
 
 ## Contributing
 
-Issues and PRs are welcome, especially adaptations for other agents and other gateway vendors. Run `scripts/check-public.sh tree` before opening a PR.
+Issues and PRs are welcome, especially adaptations for other agents and other gateway vendors. Run `scripts/check-public.sh tree` before opening a PR. For security problems, see [SECURITY.md](SECURITY.md).
+
+## License
+
+Public domain ([Unlicense](LICENSE)). Use it however you like; no attribution needed.
