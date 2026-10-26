@@ -69,9 +69,9 @@ admin laptop: change-window.sh open checks the manifest's age and hash
 1. **Bootstrap restore point (manual):** download one backup by hand and record it, so the first change window is allowed.
 2. **Gateway:** create the backup account (owner, in the console). Test whether View Only can download auto-backups.
 3. **NAS:** create the share, the job user and the read-only user; install Snapshot Replication; set immutable snapshots (owner, in DSM).
-4. **Job script:** versioned in this repo (`scripts/nas/pull-gateway-backup.sh`), deployed to the NAS, scheduled daily after the gateway's backup time.
+4. **Job script:** done, versioned in this repo (`scripts/nas/pull-gateway-backup.sh`), deployed to the NAS, scheduled daily after the gateway's backup time.
 5. **Gateway:** change auto-backup from weekly to daily. This is a gateway config change, so it goes through a change window, which step 1 makes possible.
-6. **Gate:** switch `change-window.sh` to the manifest.
+6. **Gate:** done. `change-window.sh` reads the manifest when `BACKUP_MANIFEST` is set and falls back to the manual record. Owner steps: [gateway-backups-setup.md](gateway-backups-setup.md).
 
 ## Couldn't verify yet
 
