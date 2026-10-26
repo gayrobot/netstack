@@ -14,6 +14,22 @@ Template:
 - Approved by / when:
 ```
 
+## 2026-10-26: Run the UniFi MCP from the hash-locked environment
+- Status: proposed
+- Target: agent machine; the UniFi MCP server launch command
+- Why: `uvx unifi-network-mcp==0.38.3` re-resolves the libraries that hold the permission gate on every run ([vetting](vetting/unifi-mcp.md), Finding 3)
+- Diff: create a venv from `docs/vetting/locks/unifi-network-mcp-0.38.3.txt` with `--require-hashes --no-deps --no-build`; point the MCP server command at that venv's `unifi-network-mcp` instead of `uvx`; disable the plugin's own server entry
+- Rollback: re-enable the plugin's server entry
+- Approved by / when: pending
+
+## 2026-10-26: Category-scoped change windows
+- Status: proposed
+- Target: `scripts/change-window.sh`
+- Why: server-wide `update` also enables reboot, firmware upgrade, port power-cycle and permanent client deletion ([vetting](vetting/unifi-mcp.md), Finding 5)
+- Diff: `open` takes the categories the change needs and enables only `UNIFI_POLICY_NETWORK_<CATEGORY>_<ACTION>` for those, leaving server-wide create/update off. First check how the client passes extra env vars to the MCP process
+- Rollback: revert the script
+- Approved by / when: pending
+
 ## 2026-10-26: Daily gateway backups to the NAS
 - Status: approved 2026-10-26 (design in [gateway-backups.md](gateway-backups.md)); building
 - Target: gateway (new backup account; auto-backup weekly → daily), NAS (share, two users, immutable snapshots, scheduled job)
