@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.local)",
+      "Edit(./.env)",
+      "Edit(./.env.local)",
+      "Bash(cat .env)",
+      "Bash(cat .env.local)",
+      "Bash(ssh *10.0.0.1*)",
+      "Bash(ssh root@*)"
+    ]
+  }
+}

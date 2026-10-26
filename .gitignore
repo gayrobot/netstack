@@ -1,0 +1,25 @@
+# Secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+secrets/
+
+# UniFi backups and raw API dumps (contain MACs, keys, PSKs)
+*.unf
+*.unifi
+backups/
+raw/
+
+# Local Claude Code settings
+.claude/settings.local.json
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
+
+# Private specifics (hostnames, service names, real inventory). Never committed.
+private/
