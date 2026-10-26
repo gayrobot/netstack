@@ -1,6 +1,6 @@
 # Gateway backups: owner setup checklist
 
-The steps only the owner does (accounts, DSM admin, keys). Design: [gateway-backups.md](gateway-backups.md). Names below are suggestions; real ones go in `private/`.
+The steps only the owner does (accounts, DSM admin, keys). Design: [gateway-backups.md](gateway-backups.md). Account and share names are placeholders; the real ones are recorded in `private/` only.
 
 ## Accounts: three new, each with one job
 
