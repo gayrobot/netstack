@@ -16,7 +16,7 @@ Later phases (not active yet):
 2. **Don't SSH into the UDM.** Use the UniFi API through the MCP, which is a narrower surface and easier to audit.
 3. **Don't read, print or `cat` `.env`** or any other credential file. Use `.env.example` to see which variables exist.
 4. **Log every proposed change in `docs/changes.md`**, including ones that get rejected.
-5. Use **read-only MCP tools only** (`list_*`, `get_*`, `lookup_*`). If a task seems to need a mutating tool, stop and propose it as a diff.
+5. Use **read-only MCP tools only** (`list_*`, `get_*`, `lookup_*`). If a task seems to need a mutating tool, stop and propose it as a diff. Writes happen only inside a change window for one approved entry (`docs/change-control.md`); close the window as soon as the change is verified, and never open one without the owner's approval in chat.
 6. **Public vs. private.** Real hostnames, account names, service and container names, and the exact inventory go in `private/` (gitignored). Tracked files use role names only. See `docs/redaction.md`. No MACs, public IPs or IPv6 prefixes, passphrases, keys or serials anywhere tracked.
 7. **Never bypass the hooks** (`--no-verify`). If `scripts/check-public.sh` blocks a commit, fix the content.
 8. **Separate verified from inferred.** Every doc ends with a "Couldn't verify" list.
@@ -26,6 +26,7 @@ Later phases (not active yet):
 - `docs/network.md`: VLANs, zones, inbound exposure (role names)
 - `docs/hosts/`: one page per host role
 - `docs/changes.md`: change log (proposed, approved, applied, rejected)
+- `docs/change-control.md` + `scripts/change-window.sh`: just-in-time write access; `docs/change-windows.log` is its audit log
 - `docs/vetting/`: supply-chain reviews of every MCP server and skill before it's used
 - `docs/redaction.md`: how the public/private split is enforced
 - `private/`: real specifics, raw dumps, the denylist (never committed)

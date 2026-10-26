@@ -10,5 +10,18 @@
       "Bash(ssh *10.0.0.1*)",
       "Bash(ssh root@*)"
     ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"$CLAUDE_PROJECT_DIR/scripts/change-window.sh\" status --hook",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
   }
 }

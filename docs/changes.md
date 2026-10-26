@@ -33,9 +33,9 @@ Template:
 - Approved by / when: pending
 
 ## 2026-10-26: Turn UniFi MCP create/update policies off
-- Status: proposed
+- Status: applied 2026-10-26 via `scripts/change-window.sh close` (takes effect after `/reload-plugins`); read-only is now the default, and writes go through change windows (see [change-control.md](change-control.md))
 - Target: Claude Code user settings, `pluginConfigs["unifi-network@unifi-plugins"]`
 - Why: Phase 1 is read-only, but `policy_create` and `policy_update` are both `true`, so the MCP can create and modify objects (the confirm prompt is the only remaining guard).
 - Diff: `policy_create: true -> false`, `policy_update: true -> false` (`policy_delete` is already off)
 - Rollback: set them back to `true`, then `/reload-plugins`
-- Approved by / when: pending
+- Approved by / when: owner, in chat, 2026-10-26
