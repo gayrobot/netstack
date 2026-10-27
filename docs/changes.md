@@ -14,13 +14,35 @@ Template:
 - Approved by / when:
 ```
 
+## 2026-10-26: Gateway: agent account to View Only
+- Status: approved 2026-10-26; owner to apply in the console
+- Target: the agent's local gateway account (used by the UniFi MCP)
+- Why: write access should come only from change windows; the account's current role is unknown
+- Diff: UniFi OS → Admins & Users → agent account → Network role **View Only**, no other app access, no remote/cloud access
+- Verify (agent, read-only): `list_networks`, `list_firewall_policies`, `list_clients`, `list_port_forwards`, `list_backups` still succeed. Any that fail get recorded as needing a higher role
+- Rollback: restore the previous role
+- Approved by / when: owner, in chat, 2026-10-26
+
+## 2026-10-26: NAS: non-admin account for the agent's everyday reads
+- Status: approved 2026-10-26; owner creates the account, agent runs the smoke test
+- Target: NAS accounts; the Synology MCP config (username + Keychain item)
+- Why: the agent's NAS account is in `administrators` ([vetting](vetting/synology-mcp.md))
+- Plan:
+  1. Owner creates a new non-admin NAS user for the agent: not in `administrators`, read-only on the shares the agent should see, no access elsewhere, DSM desktop and File Station allowed, everything else denied.
+  2. Owner adds its password to the Keychain under service `synology-mcp`, then switches the MCP config's username to it.
+  3. Agent runs the read smoke test: `synology_status`, `synology_system_info`, `synology_volume_status`, `synology_storage_pool`, `synology_disk_health`, `synology_health_summary`, `synology_utilization`, `list_shares`, `list_directory`, `synology_list_users`, `synology_get_user_permissions`, `synology_services`. Each one gets recorded as works / needs admin.
+  4. Decide from the results: if the health and storage reads need admin, those go through a change window, or later through the proxy in [jit-design.md](jit-design.md).
+  5. The current admin account stays for the owner's own use and is removed from the agent's config.
+- Rollback: switch the MCP config back to the previous account
+- Approved by / when: owner, in chat, 2026-10-26
+
 ## 2026-10-26: Synology MCP: deny write tools in the agent client
-- Status: proposed
+- Status: **applied 2026-10-26.** 46 deny rules in the agent client's user settings (43 write tools, `synology_login`, Edit/Write on the server's config directory). Verified: the denied tools dropped out of the agent's available tools right away, and read tools still work. Backup of the previous settings kept next to the file
 - Target: agent client user settings (permission deny rules)
 - Why: 43 write tools with no gating, running as a NAS administrator, no per-call prompt ([vetting](vetting/synology-mcp.md))
 - Diff: add `deny` rules for the 43 write tools and `synology_login`, plus deny writes/edits to the server's config directory (so the remote bridge can't be enabled)
 - Rollback: remove the rules
-- Approved by / when: pending
+- Approved by / when: owner, in chat, 2026-10-26
 
 ## 2026-10-26: Synology MCP: hash lock, fixed working directory, TLS verification
 - Status: proposed
