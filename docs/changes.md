@@ -14,6 +14,30 @@ Template:
 - Approved by / when:
 ```
 
+## 2026-10-26: Synology MCP: deny write tools in the agent client
+- Status: proposed
+- Target: agent client user settings (permission deny rules)
+- Why: 43 write tools with no gating, running as a NAS administrator, no per-call prompt ([vetting](vetting/synology-mcp.md))
+- Diff: add `deny` rules for the 43 write tools and `synology_login`, plus deny writes/edits to the server's config directory (so the remote bridge can't be enabled)
+- Rollback: remove the rules
+- Approved by / when: pending
+
+## 2026-10-26: Synology MCP: hash lock, fixed working directory, TLS verification
+- Status: proposed
+- Target: the local wrapper script that starts the Synology MCP
+- Why: floating dependencies; `./.env` gets loaded from the agent's working directory; TLS verification off while sending an admin password
+- Diff: `cd` into the wrapper's own directory before starting; run from a venv built from `docs/vetting/locks/mcp-server-synology-1.8.0.txt`; `VERIFY_SSL=true` with `REQUESTS_CA_BUNDLE` set to the NAS certificate (requires a cert valid for the address used)
+- Rollback: restore the previous wrapper
+- Approved by / when: pending
+
+## 2026-10-26: Synology MCP: non-admin account for everyday reads
+- Status: proposed (needs testing which read tools work without admin)
+- Target: NAS accounts; Synology MCP config
+- Why: the agent's NAS account is in `administrators`
+- Diff: create a non-admin read account for daily use; keep admin credentials for change windows only, or put a filtering MCP proxy in front with a read-tool allowlist and a call log
+- Rollback: switch the MCP back to the current account
+- Approved by / when: pending
+
 ## 2026-10-26: Run the UniFi MCP from the hash-locked environment
 - Status: proposed
 - Target: agent machine; the UniFi MCP server launch command

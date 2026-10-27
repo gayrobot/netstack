@@ -45,5 +45,5 @@ Copy this into `docs/vetting/<name>.md` and fill in every line. Write "not check
 | Tool | Version | Verdict | Review |
 |---|---|---|---|
 | UniFi Network MCP (sirkirby/unifi-mcp) | plugin 1.1.5, PyPI 0.38.3 | OK with conditions | [unifi-mcp.md](unifi-mcp.md) |
-| Synology MCP | – | **Not vetted** (already connected, as a NAS admin) | next |
+| Synology MCP (atom2ueki/mcp-server-synology) | 1.8.0 | **Not OK as configured** (admin account, 43 ungated write tools) | [synology-mcp.md](synology-mcp.md) |
 | HomeClaw plugin | 1.0.13 | **Not vetted** (already installed) | pending |
