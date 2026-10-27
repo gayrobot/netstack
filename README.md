@@ -110,7 +110,7 @@ private/                  gitignored: real names, raw dumps, denylist, configs
 
 - **Phase 1 (read-only inventory):** done for the gateway, VM host and app VM.
 - **Phase 2 (backups and drift detection):** the backup pipeline is built and tested against fixtures; NAS deployment is in progress. Drift detection isn't started.
-- **Phase 3 (approved writes):** the change-window tooling works; the first real windows are pending.
+- **Phase 3 (approved writes):** the change-window tooling works; the first real windows are pending. The longer-term design (broker, self-expiring grants, risk tiers) is in [docs/jit-design.md](docs/jit-design.md).
 
 ## Known limits
 

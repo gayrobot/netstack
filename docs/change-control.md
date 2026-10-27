@@ -2,6 +2,8 @@
 
 The agent manages the network, but it doesn't hold standing write access to the gateway. It reads all the time, and it writes only inside a short window opened for one approved change.
 
+This is step 1. Where it's headed (a broker that holds credentials, self-expiring grants, risk tiers) is in [jit-design.md](jit-design.md).
+
 ## Why
 
 - **Blast radius.** One bad firewall or VLAN write can cut off the path the agent itself uses, so it can't undo its own mistake.
