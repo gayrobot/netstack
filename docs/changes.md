@@ -15,7 +15,7 @@ Template:
 ```
 
 ## 2026-10-28: Backup job creates a fresh gateway backup each night
-- Status: **tested and built 2026-10-28**; deploying to the NAS (owner re-uploads the script). Test: on-demand create returned `rc: ok` in about 1 s; the download was a valid archive; the file does not join the auto-backup list and its name is fixed per controller version, so it is overwritten each run and nothing builds up. The updated job ran twice locally against the gateway (exit 0), and a **test decrypt** with the offline key reproduced the original file's hash exactly
+- Status: **applied 2026-10-28.** Deployed on the NAS; first on-demand run stored a backup created the same minute, `archive_check: ok` (verified by the agent through the read-only NAS account). Test: on-demand create returned `rc: ok` in about 1 s; the download was a valid archive; the file does not join the auto-backup list and its name is fixed per controller version, so it is overwritten each run and nothing builds up. The updated job ran twice locally against the gateway (exit 0), and a **test decrypt** with the offline key reproduced the original file's hash exactly
 - Target: the NAS backup job; the gateway's network backups (via the backup account, Network Full Management)
 - Why: on Network 10.6 the auto-backup schedule is weekly only and the UI has no daily option. "Back Up Now" on the console page makes a cloud console backup, not a network backup the job can fetch
 - Diff: before pulling, the job calls the API to create an on-demand network backup and downloads that file. No gateway setting changes. It creates one backup file on the gateway per run
