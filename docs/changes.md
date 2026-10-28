@@ -39,7 +39,7 @@ Template:
 - Approved by / when: owner, in chat, 2026-10-28 ("we will now use 1Password, fix the configuration")
 
 ## 2026-10-28: Split each MCP into a read connection and a per-call-approved write connection
-- Status: proposed
+- Status: **applied 2026-10-28** in the agent client (takes effect in a new session). Gateway write connection runs from the hash-locked environment and was checked to start and log in as the write account. `ask` rules cover both write connections; the NAS write connection also denies `synology_login`. `change-window.sh` runs in gate-only mode. Not yet verified: that the approval prompt appears in a new session, and one real tier-1 write end to end. Not done: a hash lock for the NAS write connection (its launcher still uses `uvx`), and TLS verification for both write connections (the MCPs only support verify on or off, and both devices use self-signed certificates)
 - Target: agent client MCP config and permission rules; gateway and NAS agent accounts (2026-10-28: the original agent account on each device was renamed to become the write account, with its password unchanged; the read-only accounts are new)
 - Why: change windows need a script, two plugin reloads and a fresh restore point for every write, which is too much for small fixes. With the agent's gateway account at View Only and no write account wired up, the agent can't make gateway fixes at all
 - Diff:
@@ -49,7 +49,7 @@ Template:
   4. Rules: firewall, VLAN, WAN, VPN and NAS share-permission changes still need a `changes.md` entry and a fresh restore point first. Account, authentication, backup and snapshot changes stay with the owner. Everything else is click-to-approve, and the agent logs it here afterwards
   5. `change-window.sh` stays for tier-2 changes; `change-control.md` and `CLAUDE.md` rule 5 are updated to match
 - Rollback: remove the write connections and their rules; the read connections keep working
-- Approved by / when: pending
+- Approved by / when: owner, in chat, 2026-10-28 ("Build the split")
 
 ## 2026-10-28: Rename one access switch (name only)
 - Status: **applied 2026-10-28 by the owner in the UniFi UI, outside a change window.** The owner asked for a window in chat, but `change-window.sh open` was blocked (no usable off-box gateway backup on record), so the owner made the rename by hand. The agent did not apply it. Not verified by the agent after the fact

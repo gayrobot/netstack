@@ -4,11 +4,9 @@ A home network (UniFi Dream Machine Pro, a Mac Pro VM host and the VMs on it) ru
 
 ## Phase
 
-**Phase 1: read-only.** Inventory the network and write docs. Change no config on any device.
-
-Later phases (not active yet):
-2. Drift detection and scheduled config backups
-3. Writes, only as proposed diffs that the owner approves, logged in git
+1. Read-only inventory and docs: **done**.
+2. Scheduled config backups: **done** (nightly, off-box, encrypted). Drift detection: not started.
+3. Writes: **active since 2026-10-28**, through write connections where the owner approves every call (rule 5).
 
 ## Rules
 
@@ -16,7 +14,10 @@ Later phases (not active yet):
 2. **Don't SSH into the UDM.** Use the UniFi API through the MCP, which is a narrower surface and easier to audit.
 3. **Don't read, print or `cat` `.env`** or any other credential file. Use `.env.example` to see which variables exist.
 4. **Log every proposed change in `docs/changes.md`**, including ones that get rejected.
-5. Use **read-only MCP tools only** (`list_*`, `get_*`, `lookup_*`). If a task seems to need a mutating tool, stop and propose it as a diff. Writes happen only inside a change window for one approved entry (`docs/change-control.md`); close the window as soon as the change is verified, and never open one without the owner's approval in chat.
+5. **Read with the read connections, write with the write connections.** Each device has a read connection (read-only account, no prompts) and a write connection (write account; the owner approves every call in the client). Never use a write connection for reads. Tiers (`docs/change-control.md`):
+   - **Tier 1** (names, labels, a port forward toggle, a DHCP reservation, restarting one device): propose the call, the owner approves it, then log it in `docs/changes.md`.
+   - **Tier 2** (everything in rule 1, plus NAS share permissions): a `changes.md` entry and chat approval first, then `scripts/change-window.sh open "<title>"` (checks for a fresh restore point and logs), apply, verify, `close`.
+   - **Tier 3** (accounts, authentication, backups, snapshots, these controls themselves): never through the agent. Propose; the owner does it.
 6. **Public vs. private.** Real hostnames, account names, service and container names, and the exact inventory go in `private/` (gitignored). Tracked files use role names only. See `docs/redaction.md`. No MACs, public IPs or IPv6 prefixes, passphrases, keys or serials anywhere tracked.
 7. **Never bypass the hooks** (`--no-verify`). If `scripts/check-public.sh` blocks a commit, fix the content.
 8. **Separate verified from inferred.** Every doc ends with a "Couldn't verify" list.
@@ -26,7 +27,7 @@ Later phases (not active yet):
 - `docs/network.md`: VLANs, zones, inbound exposure (role names)
 - `docs/hosts/`: one page per host role
 - `docs/changes.md`: change log (proposed, approved, applied, rejected)
-- `docs/change-control.md` + `scripts/change-window.sh`: just-in-time write access; `docs/change-windows.log` is its audit log
+- `docs/change-control.md` + `scripts/change-window.sh`: write tiers and the restore-point gate; `docs/change-windows.log` is its audit log
 - `docs/vetting/`: supply-chain reviews of every MCP server and skill before it's used
 - `docs/redaction.md`: how the public/private split is enforced
 - `private/`: real specifics, raw dumps, the denylist (never committed)

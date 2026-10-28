@@ -4,6 +4,27 @@ The agent manages the network, but it doesn't hold standing write access to the 
 
 This is step 1. Where it's headed (a broker that holds credentials, self-expiring grants, risk tiers) is in [jit-design.md](jit-design.md).
 
+## Current setup: write connections with per-call approval (since 2026-10-28)
+
+Each device has two MCP connections:
+
+| Connection | Account | Prompts |
+|---|---|---|
+| Gateway read (the UniFi plugin) | View Only | none |
+| Gateway write (`unifi-write`, hash-locked environment) | Network Site Admin; create and update on, delete off | the owner approves **every call** (an `ask` rule in the client) |
+| NAS read (`synology`) | non-admin | none; write tools denied |
+| NAS write (`synology-write`) | administrator | the owner approves **every call**; `synology_login` denied |
+
+What each tier needs:
+
+- **Tier 1** (small, reversible: names, labels, a port forward toggle, a DHCP reservation, restarting one device): one click on the call, then a log entry.
+- **Tier 2** (firewall, VLAN, DHCP scopes, WAN, VPN, WLAN, routing, NAS share permissions): a `changes.md` entry, chat approval, then `change-window.sh open`. With `WINDOW_MODE=gate` the script only checks for a fresh off-box restore point and logs; the write itself is still one click per call.
+- **Tier 3** (accounts, authentication, backups, snapshots, these controls): never through the agent.
+
+The approval prompt shows the exact tool and arguments, so approving it is the change control. The risk is rubber-stamping; tier 2 keeps the restore-point gate for the changes that can cut off the network.
+
+The sections below describe the original flag-flipping windows (`WINDOW_MODE=flags`), kept for setups with a single connection.
+
 ## Why
 
 - **Blast radius.** One bad firewall or VLAN write can cut off the path the agent itself uses, so it can't undo its own mistake.

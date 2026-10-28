@@ -20,6 +20,10 @@
 # and close switches back to RO_USERNAME / RO_PASSWORD_COMMAND, so the UDM role (not just
 # the MCP's own flags) is the boundary. Every open/close is appended to docs/change-windows.log.
 # Plugin option changes apply after /reload-plugins or a new session.
+#
+# WINDOW_MODE=gate (set in the conf) is for setups with a separate write connection that asks the
+# owner on every call: open and close then only check the restore point and log, and never touch
+# the read connection's settings. The default, flags, keeps the behaviour described above.
 set -eu
 root=$(cd "$(dirname "$0")/.." && pwd)
 settings="$HOME/.claude/settings.json"
@@ -31,6 +35,7 @@ backups="$root/private/backup-record.tsv"
 
 RO_USERNAME= RO_PASSWORD_COMMAND= RW_USERNAME= RW_PASSWORD_COMMAND=
 BACKUP_MAX_AGE_DAYS=3 BACKUP_MANIFEST=
+WINDOW_MODE=flags
 BACKUP_NAS_URL= BACKUP_NAS_PIN= BACKUP_NAS_USER= BACKUP_NAS_PASSWORD_COMMAND= BACKUP_NAS_DIR=
 # shellcheck disable=SC1090
 [ -f "$conf" ] && . "$conf"
@@ -180,6 +185,11 @@ case "${1:-status}" in
     b=$(check_backup) || exit 1
     set -- $b
     restore="$1 backup sha256:$2 (${3}h old)"
+    if [ "$WINDOW_MODE" = gate ]; then
+      printf '%s OPEN  %s | gate only | %s\n' "$(stamp)" "$title" "$restore" >> "$log"
+      echo "Gate passed for: $title (restore point: $restore). Apply it through the write connection, verify, then: $0 close"
+      exit 0
+    fi
     if [ -n "$RW_USERNAME" ]; then
       set_options true "$RW_USERNAME" "$RW_PASSWORD_COMMAND"; acct="write account"
     else
@@ -199,6 +209,7 @@ case "${1:-status}" in
     printf '%s BACKUP recorded sha256:%s (%s bytes)\n' "$(stamp)" "$(printf '%s' "$hash" | cut -c1-12)" "$size" >> "$log"
     echo "Recorded backup sha256:$(printf '%s' "$hash" | cut -c1-12), $size bytes. Keep it at: $f" ;;
   close)
+    if [ "$WINDOW_MODE" = gate ]; then printf '%s CLOSE\n' "$(stamp)" >> "$log"; echo "Closed and logged."; exit 0; fi
     set_options false "$RO_USERNAME" "$RO_PASSWORD_COMMAND"
     printf '%s CLOSE\n' "$(stamp)" >> "$log"
     echo "Window closed: MCP is read-only. Run /reload-plugins (or start a new session) to apply." ;;

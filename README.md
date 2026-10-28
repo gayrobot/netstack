@@ -1,6 +1,6 @@
 # netstack
 
-A home network run by an AI agent **under governance**: the agent reads freely, writes only inside short approved change windows, logs every change in git, and never holds standing admin on the gateway.
+A home network run by an AI agent **under governance**: the agent reads freely, writes through separate connections where a person approves every call, needs a fresh off-box backup before risky changes, and logs every change in git.
 
 It's built around a UniFi gateway and a Synology NAS, managed through MCP servers. The controls are plain shell scripts and git hooks, so they work with whichever agent you use: Claude Code, Codex, Cursor, Aider, or anything else that can read files and run commands.
 
@@ -9,8 +9,8 @@ It's built around a UniFi gateway and a Synology NAS, managed through MCP server
 | Control | What it does | Where |
 |---|---|---|
 | **Rules file** | Read-only phase, no SSH to the gateway, no reading `.env`, log every change, verified vs. inferred | [`CLAUDE.md`](CLAUDE.md) (also read via [`AGENTS.md`](AGENTS.md)) |
-| **Just-in-time write access** | The MCP is read-only by default. A window opens for one approved change, then closes. Every open and close is logged | [`scripts/change-window.sh`](scripts/change-window.sh), [`docs/change-control.md`](docs/change-control.md) |
-| **Restore point gate** | A window won't open without a fresh, hash-verified, off-box gateway backup | same script; [`docs/gateway-backups.md`](docs/gateway-backups.md) |
+| **Read/write split** | Read connections use read-only accounts and never prompt. Write connections use separate accounts, and the owner approves every call. Changes are tiered by risk | [`docs/change-control.md`](docs/change-control.md) |
+| **Restore point gate** | Risky (tier 2) changes need a fresh, hash-verified, off-box gateway backup first | same script; [`docs/gateway-backups.md`](docs/gateway-backups.md) |
 | **Automated backups** | The NAS pulls the gateway's auto-backup daily over a pinned TLS key, checks that it's a valid archive, encrypts it to an offline key, and stores it under immutable snapshots | [`scripts/nas/pull-gateway-backup.sh`](scripts/nas/pull-gateway-backup.sh), [`docs/gateway-backups-setup.md`](docs/gateway-backups-setup.md) |
 | **Change log** | Every proposal with diff, rollback, verification and approval | [`docs/changes.md`](docs/changes.md) |
 | **Public/private split** | Real hostnames and inventory live in a gitignored `private/`; hooks block commits that leak them, and they fail closed | [`scripts/check-public.sh`](scripts/check-public.sh), [`docs/redaction.md`](docs/redaction.md) |
@@ -68,12 +68,11 @@ Flag anything exposed to the internet or bound to 0.0.0.0.
 ### 5. Making a change
 
 ```
-agent proposes an entry in docs/changes.md  (diff, rollback, verification)
-you approve it in chat
-scripts/change-window.sh open "<exact entry title>"    # refuses without a fresh backup
-reload your agent's MCP config; the agent applies and verifies
-scripts/change-window.sh close
-commit docs/changes.md + docs/change-windows.log
+small fix (tier 1):  agent proposes the call → you approve the prompt → agent logs it in docs/changes.md
+risky (tier 2):      agent writes a docs/changes.md entry → you approve in chat
+                     scripts/change-window.sh open "<exact entry title>"   # refuses without a fresh backup
+                     agent applies through the write connection (you approve each call), verifies
+                     scripts/change-window.sh close
 ```
 
 `scripts/change-window.sh status` shows the current state and restore point at any time.
@@ -109,8 +108,8 @@ private/                  gitignored: real names, raw dumps, denylist, configs
 ## Status
 
 - **Phase 1 (read-only inventory):** done for the gateway, VM host and app VM.
-- **Phase 2 (backups and drift detection):** the backup pipeline is built and tested against fixtures; NAS deployment is in progress. Drift detection isn't started.
-- **Phase 3 (approved writes):** the change-window tooling works; the first real windows are pending. The longer-term design (broker, self-expiring grants, risk tiers) is in [docs/jit-design.md](docs/jit-design.md).
+- **Phase 2 (backups and drift detection):** nightly off-box gateway backups run on the NAS, and a test decrypt has succeeded. Drift detection isn't started.
+- **Phase 3 (approved writes):** live since 2026-10-28 through per-call-approved write connections; tier 2 changes also need a fresh restore point. The longer-term design (broker, self-expiring grants, risk tiers) is in [docs/jit-design.md](docs/jit-design.md).
 
 ## Known limits
 
