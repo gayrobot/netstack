@@ -75,7 +75,7 @@ admin laptop: change-window.sh open checks the manifest's age and hash
 
 ## Couldn't verify yet
 
-- Which gateway role can download auto-backups, and the exact download endpoint on this firmware. Tested 2026-10-28: listing backups returns 403 for **View Only** and **Site Admin**. Full Management is untested.
-  - **Open question (owner):** if only Full Management works, the backup account can rewrite the whole network, and its password sits on the NAS. Choices: accept that, keep it local-only, and protect the job folder; download backups by hand before tier-2 changes; or look for a narrower route
+- Which gateway role can download auto-backups, and the exact download endpoint on this firmware. Tested 2026-10-28: listing backups returns 403 for **View Only** and **Site Admin**. **Full Management works** (tested 2026-10-28: list and download both succeed, without super admin).
+  - **Accepted by the owner 2026-10-28:** with Full Management, the backup account can rewrite the whole network, and its password sits on the NAS. Choices: accept that, keep it local-only, and protect the job folder; download backups by hand before tier-2 changes; or look for a narrower route
 - Whether this DSM build allows immutable snapshots on this volume
 - Whether DSM's `openssl` supports `cms -encrypt` (it should; this needs checking on the box)

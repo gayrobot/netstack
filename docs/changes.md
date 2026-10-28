@@ -117,7 +117,7 @@ Template:
 
 ## 2026-10-26: Daily gateway backups to the NAS
 - Status: approved 2026-10-26 (design in [gateway-backups.md](gateway-backups.md)); building
-- Finding 2026-10-28: listing backups (`cmd/backup list-backups`) returns 403 for both **View Only** and **Site Admin**. The backup account currently has the predefined Viewer role, which also grants read access to the other UniFi apps and the user list; it needs Network only. The remaining candidate is Full Management, which can change the entire network, so it's an owner decision, not a default (see the open question in [gateway-backups.md](gateway-backups.md))
+- Finding 2026-10-28: listing backups (`cmd/backup list-backups`) returns 403 for both **View Only** and **Site Admin**. The backup account currently has the predefined Viewer role, which also grants read access to the other UniFi apps and the user list; it needs Network only. Retested the same day with Network **Full Management** and no other app or admin access (not super admin): listing works (8 auto-backups, newest 2026-10-25) and downloading works (HTTP 200). So Full Management is the lowest role that works. Community sources saying Super Admin or Owner is required are outdated for this firmware. Trade-off: the job's credential can change the entire network, so it stays on the NAS only, local-only, and readable only by the job user
 - Target: gateway (new backup account; auto-backup weekly → daily), NAS (share, two users, immutable snapshots, scheduled job)
 - Why: the only gateway backups are stored on the gateway itself; change windows need a verified off-box restore point
 - Diff: see the build order in gateway-backups.md; the gateway auto-backup schedule `30 0 * * 0` → `30 0 * * *`, max files unchanged
