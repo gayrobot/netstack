@@ -14,15 +14,44 @@ Template:
 - Approved by / when:
 ```
 
+## 2026-10-28: Agent credentials from 1Password; both MCPs on the read-only accounts
+- Status: **applied 2026-10-28** in the agent client config (the NAS launcher swap is done by the owner). Verified before switching: all four agent accounts log in. Gateway read account: Network `readonly`. Gateway write account: Network `admin` and super admin; the owner reduced it the same day to Network **Site Admin** with no other app or admin-management access, and the agent confirmed it is no longer a super admin. NAS read account: not in `administrators`. NAS write account: in `administrators`
+- Target: agent client user settings (UniFi plugin options), MCP config (Synology env), the NAS MCP launcher
+- Why: the owner keeps the agent passwords in 1Password; the Keychain copies were stale after the accounts were renamed
+- Diff: UniFi username → read account, `password_command` → `op read <ref>`, owner's personal API key removed. Synology username → read account, launcher reads `op read "$SYNOLOGY_OP_REF"` instead of the Keychain
+- Note: each MCP start is its own `op` process, so each one triggers a 1Password approval
+- Smoke test 2026-10-28, after reload, both MCPs on the read accounts:
+  - Gateway: `list_networks`, `list_firewall_policies`, `list_clients`, `list_port_forwards`, `list_devices` work. `list_backups` returns 403 (as expected with View Only)
+  - NAS, works: `synology_status`, `synology_system_info`, `list_shares`, `list_directory`. `synology_health_summary` succeeds but returns only the system section
+  - NAS, needs admin (error 105): `synology_volume_status`, `synology_storage_pool`, `synology_disk_health`, `synology_utilization`, `synology_list_users`, `synology_get_user_permissions`, `synology_services`
+  - NAS: the read account lists every share. Not checked yet: whether it can read files in all of them, or only see their names
+- Parked: disk, volume and pool health need admin on the NAS. Nothing depends on them yet; revisit with drift detection (SNMPv3 read-only is the likely route)
+- Rollback: restore the `.bak-1password` copies of both config files and the previous launcher
+- Approved by / when: owner, in chat, 2026-10-28 ("we will now use 1Password, fix the configuration")
+
+## 2026-10-28: Split each MCP into a read connection and a per-call-approved write connection
+- Status: proposed
+- Target: agent client MCP config and permission rules; gateway and NAS agent accounts (2026-10-28: the original agent account on each device was renamed to become the write account, with its password unchanged; the read-only accounts are new)
+- Why: change windows need a script, two plugin reloads and a fresh restore point for every write, which is too much for small fixes. With the agent's gateway account at View Only and no write account wired up, the agent can't make gateway fixes at all
+- Diff:
+  1. Read connections (gateway, NAS) log in as the read-only accounts. No prompts. The gateway read connection drops the owner's personal API key (done; see the 1Password entry above)
+  2. New write connections log in as the write accounts, run from the hash-locked environments, and have an `ask` rule on every tool, so each call needs one owner click. Gateway `delete` stays off
+  3. The 46 NAS deny rules move from deny to `ask` on the write connection only; the read connection keeps them
+  4. Rules: firewall, VLAN, WAN, VPN and NAS share-permission changes still need a `changes.md` entry and a fresh restore point first. Account, authentication, backup and snapshot changes stay with the owner. Everything else is click-to-approve, and the agent logs it here afterwards
+  5. `change-window.sh` stays for tier-2 changes; `change-control.md` and `CLAUDE.md` rule 5 are updated to match
+- Rollback: remove the write connections and their rules; the read connections keep working
+- Approved by / when: pending
+
 ## 2026-10-28: Rename one access switch (name only)
-- Status: proposed; owner asked for a window in chat 2026-10-28, but `change-window.sh open` is blocked (no usable off-box gateway backup on record)
+- Status: **applied 2026-10-28 by the owner in the UniFi UI, outside a change window.** The owner asked for a window in chat, but `change-window.sh open` was blocked (no usable off-box gateway backup on record), so the owner made the rename by hand. The agent did not apply it. Not verified by the agent after the fact
 - Target: one access switch (recovered today after a physical reset and re-adopt); controller device name only
 - Why: after the reset it came back with the model name; the owner wants a role-based name
 - Diff: device name `<model default> -> <owner's chosen name>` via `rename_device`. No port, VLAN, firewall or gateway change
-- Window note: `open` enables server-wide `policy_update`, which also covers reboot, firmware upgrade and client deletion ([vetting](vetting/unifi-mcp.md), Finding 5). The agent applies only the rename. The category-scoped window entry above would narrow this
+- Window note: `open` enables server-wide `policy_update`, which also covers reboot, firmware upgrade and client deletion ([vetting](vetting/unifi-mcp.md), Finding 5). Had a window opened, the agent would have applied only the rename. The category-scoped window entry above would narrow this
 - Rollback: rename it back
 - Verify (agent): `list_devices` shows the new name; the switch stays online with the same port table
-- Approved by / when: pending (owner's go-ahead to open the window is not a restore point)
+- Approved by / when: owner, in chat, 2026-10-28 (asked for a window; the backup gate blocked it, so no window was opened and the change did not go through the process)
+- Follow-up: record whether low-risk, non-gateway changes should get a lighter path or a logged owner override
 
 ## 2026-10-26: Gateway: agent account to View Only
 - Status: **applied 2026-10-28** by owner. Smoke test 2026-10-28: `list_networks`, `list_firewall_policies`, `list_clients` and `list_port_forwards` work; **`list_backups` returns 403**, so listing and downloading backups needs more than View Only. The remote-user VPN network also no longer appears in `list_networks` (5 networks instead of 6), so View Only hides some objects. Consequence: the backup job's account will hit the same 403 and needs the lowest role that can list backups
@@ -88,6 +117,7 @@ Template:
 
 ## 2026-10-26: Daily gateway backups to the NAS
 - Status: approved 2026-10-26 (design in [gateway-backups.md](gateway-backups.md)); building
+- Finding 2026-10-28: listing backups (`cmd/backup list-backups`) returns 403 for both **View Only** and **Site Admin**. The backup account currently has the predefined Viewer role, which also grants read access to the other UniFi apps and the user list; it needs Network only. The remaining candidate is Full Management, which can change the entire network, so it's an owner decision, not a default (see the open question in [gateway-backups.md](gateway-backups.md))
 - Target: gateway (new backup account; auto-backup weekly → daily), NAS (share, two users, immutable snapshots, scheduled job)
 - Why: the only gateway backups are stored on the gateway itself; change windows need a verified off-box restore point
 - Diff: see the build order in gateway-backups.md; the gateway auto-backup schedule `30 0 * * 0` → `30 0 * * *`, max files unchanged
