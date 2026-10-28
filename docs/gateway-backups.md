@@ -73,6 +73,10 @@ admin laptop: change-window.sh open checks the manifest's age and hash
 5. **Gateway:** change auto-backup from weekly to daily. This is a gateway config change, so it goes through a change window, which step 1 makes possible.
 6. **Gate:** done. `change-window.sh` reads the manifest when `BACKUP_MANIFEST` is set and falls back to the manual record. Owner steps: [gateway-backups-setup.md](gateway-backups-setup.md).
 
+## Update 2026-10-28: on-demand backups
+
+Network 10.6 offers only weekly auto-backups. The job now asks the gateway for a fresh network backup each run (`GW_MODE=ondemand`, the default) instead of pulling the newest auto-backup (`GW_MODE=auto`). This is the job's only write to the gateway, and it creates one backup file that each run overwrites. A test decrypt with the offline key matched the original file's hash.
+
 ## Couldn't verify yet
 
 - Which gateway role can download auto-backups, and the exact download endpoint on this firmware. Tested 2026-10-28: listing backups returns 403 for **View Only** and **Site Admin**. **Full Management works** (tested 2026-10-28: list and download both succeed, without super admin).

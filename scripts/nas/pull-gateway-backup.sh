@@ -1,5 +1,5 @@
 #!/bin/sh
-# Pull the newest gateway auto-backup to the NAS, verify it, encrypt it, record it.
+# Get a gateway network backup onto the NAS, verify it, encrypt it, record it.
 # Runs from DSM Task Scheduler as a dedicated non-admin user. See docs/gateway-backups.md.
 #
 #   pull-gateway-backup.sh <config>                  pull from the gateway
@@ -11,6 +11,8 @@
 #   GW_PUBKEY_PIN=sha256//<base64>   pinned TLS public key of the gateway (required)
 #   DEST=<share path>             CERT=<public X.509 cert to encrypt to>
 #   KEEP=30                       encrypted files kept in DEST (snapshots keep history)
+#   GW_MODE=ondemand              ondemand: ask the gateway for a fresh backup each run (needs
+#                                 Network Full Management); auto: pull the newest weekly auto-backup
 #
 # Exits non-zero on any failure so DSM's "email on abnormal termination" fires.
 # The plaintext backup only ever exists in a mode-700 temp dir that is removed on exit.
@@ -19,7 +21,7 @@ umask 027   # stored files group-readable for the read-only reader; the temp dir
 
 conf=${1:?usage: pull-gateway-backup.sh <config> [--file <x.unf>]}
 [ -f "$conf" ] || { echo "config not found: $conf" >&2; exit 1; }
-GW_SITE=default KEEP=30 GW_HOST= GW_USER= GW_PASSWORD_FILE= GW_PUBKEY_PIN= DEST= CERT=
+GW_SITE=default KEEP=30 GW_MODE=ondemand GW_HOST= GW_USER= GW_PASSWORD_FILE= GW_PUBKEY_PIN= DEST= CERT=
 # shellcheck disable=SC1090
 . "$conf"
 [ -n "$DEST" ] && [ -d "$DEST" ] || { echo "DEST is not a directory: $DEST" >&2; exit 1; }
@@ -54,6 +56,26 @@ pull() {
     gw -D "$tmp/login.hdr" -H 'Content-Type: application/json' --data-binary @- "$base/api/auth/login" -o /dev/null
   csrf=$(tr -d '\r' < "$tmp/login.hdr" | awk -F': ' 'tolower($1)=="x-csrf-token"{print $2}' | tail -n1)
   [ -n "$csrf" ] || { echo "login returned no CSRF token" >&2; exit 1; }
+
+  if [ "$GW_MODE" = ondemand ]; then
+    # Ask the gateway for a fresh network backup. It returns a download URL; the file is
+    # overwritten on the next request, so nothing builds up on the gateway.
+    gw -H "X-CSRF-Token: $csrf" -H 'Content-Type: application/json' --data '{"cmd":"backup","days":0}' \
+       "$base/proxy/network/api/s/$GW_SITE/cmd/backup" -o "$tmp/create.json"
+    url=$(python3 -I -c '
+import json, sys
+d = json.load(open(sys.argv[1]))
+if (d.get("meta") or {}).get("rc") != "ok": sys.exit("backup request failed")
+print(d["data"][0]["url"])
+' "$tmp/create.json") || exit 1
+    case "$url" in /dl/backup/*.unf) ;; *) echo "unexpected backup URL" >&2; exit 1 ;; esac
+    case "$url" in *[!A-Za-z0-9/._-]*) echo "unexpected backup URL" >&2; exit 1 ;; esac
+    created=$(date +%s)
+    version=$(basename "$url" .unf)
+    gw -H "X-CSRF-Token: $csrf" "$base/proxy/network$url" -o "$tmp/backup.unf"
+    gw -H "X-CSRF-Token: $csrf" -X POST "$base/api/auth/logout" -o /dev/null || true
+    return
+  fi
 
   # "list-backups" is a read-only command; it still needs POST and the CSRF token.
   gw -H "X-CSRF-Token: $csrf" -H 'Content-Type: application/json' --data '{"cmd":"list-backups"}' \

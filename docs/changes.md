@@ -14,6 +14,15 @@ Template:
 - Approved by / when:
 ```
 
+## 2026-10-28: Backup job creates a fresh gateway backup each night
+- Status: **tested and built 2026-10-28**; deploying to the NAS (owner re-uploads the script). Test: on-demand create returned `rc: ok` in about 1 s; the download was a valid archive; the file does not join the auto-backup list and its name is fixed per controller version, so it is overwritten each run and nothing builds up. The updated job ran twice locally against the gateway (exit 0), and a **test decrypt** with the offline key reproduced the original file's hash exactly
+- Target: the NAS backup job; the gateway's network backups (via the backup account, Network Full Management)
+- Why: on Network 10.6 the auto-backup schedule is weekly only and the UI has no daily option. "Back Up Now" on the console page makes a cloud console backup, not a network backup the job can fetch
+- Diff: before pulling, the job calls the API to create an on-demand network backup and downloads that file. No gateway setting changes. It creates one backup file on the gateway per run
+- Test: one on-demand backup created by hand with the backup account, downloaded, validity checked, then discarded
+- Rollback: revert the job script; the job falls back to pulling the weekly auto-backups
+- Approved by / when: owner, in chat, 2026-10-28 ("Yes, test it")
+
 ## 2026-10-28: Agent credentials from 1Password; both MCPs on the read-only accounts
 - Status: **applied 2026-10-28** in the agent client config (the NAS launcher swap is done by the owner). Verified before switching: all four agent accounts log in. Gateway read account: Network `readonly`. Gateway write account: Network `admin` and super admin; the owner reduced it the same day to Network **Site Admin** with no other app or admin-management access, and the agent confirmed it is no longer a super admin. NAS read account: not in `administrators`. NAS write account: in `administrators`
 - Target: agent client user settings (UniFi plugin options), MCP config (Synology env), the NAS MCP launcher
@@ -116,7 +125,7 @@ Template:
 - Approved by / when: pending
 
 ## 2026-10-26: Daily gateway backups to the NAS
-- Status: approved 2026-10-26 (design in [gateway-backups.md](gateway-backups.md)); **NAS job running since 2026-10-28.** First run (owner-triggered, exit 0): pulled the newest gateway auto-backup (2026-10-25), `archive_check: ok`, encrypted to the offline key, manifest written; verified by the agent through the read-only NAS account. The backup share turned out not to be encrypted at the folder level; left as is, since every file is encrypted to the offline key. Still to do: switch the gateway auto-backup from weekly to daily (until then the restore point can be up to 7 days old, older than the 3-day gate), point the laptop gate at the manifest, and run one test decrypt
+- Status: approved 2026-10-26 (design in [gateway-backups.md](gateway-backups.md)); **NAS job running since 2026-10-28.** First run (owner-triggered, exit 0): pulled the newest gateway auto-backup (2026-10-25), `archive_check: ok`, encrypted to the offline key, manifest written; verified by the agent through the read-only NAS account. The backup share turned out not to be encrypted at the folder level; left as is, since every file is encrypted to the offline key. Weekly-to-daily isn't possible on Network 10.6 (no UI option); replaced by the on-demand entry above. Still to do: point the laptop gate at the manifest
 - Finding 2026-10-28: listing backups (`cmd/backup list-backups`) returns 403 for both **View Only** and **Site Admin**. The backup account currently has the predefined Viewer role, which also grants read access to the other UniFi apps and the user list; it needs Network only. Retested the same day with Network **Full Management** and no other app or admin access (not super admin): listing works (8 auto-backups, newest 2026-10-25) and downloading works (HTTP 200). So Full Management is the lowest role that works. Community sources saying Super Admin or Owner is required are outdated for this firmware. Trade-off: the job's credential can change the entire network, so it stays on the NAS only, local-only, and readable only by the job user
 - Target: gateway (new backup account; auto-backup weekly → daily), NAS (share, two users, immutable snapshots, scheduled job)
 - Why: the only gateway backups are stored on the gateway itself; change windows need a verified off-box restore point
