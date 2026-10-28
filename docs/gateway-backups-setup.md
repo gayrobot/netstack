@@ -6,7 +6,7 @@ The steps only the owner does (accounts, DSM admin, keys). Design: [gateway-back
 
 | # | Where | Account | Can do | Can't do |
 |---|---|---|---|---|
-| 1 | Gateway | `<gateway-backup-account>` (local) | Log in to the API, list and download auto-backups | Change config (aim for View Only) |
+| 1 | Gateway | `<gateway-backup-account>` (local) | Log in to the API, list and download auto-backups | Manage admins or other UniFi apps. It **can** change network config: listing backups needs Network Full Management (tested 2026-10-28) |
 | 2 | NAS | `<nas-job-user>` | Run the scheduled job; **write** to `gateway-backups`; **read** its own script and config | Log in to DSM, SMB or any other share; edit its own script |
 | 3 | NAS | `<nas-reader-user>` | **Read** `gateway-backups` over SMB (the laptop's gate check) | Write anywhere; read the job's config or password |
 
@@ -23,7 +23,7 @@ openssl req -x509 -newkey rsa:4096 -days 3650 -subj "/CN=gateway-backup" \
 
 ## 2. Gateway account (UniFi OS console)
 
-- [ ] Admins & Users → add a **local** admin `<gateway-backup-account>`, no remote/cloud access, role **View Only** for Network.
+- [ ] Admins & Users → add a **local** admin `<gateway-backup-account>`, no remote/cloud access. Untick "Use a Predefined Role": Network **Full Management**, every other app **None**. (View Only, Viewer and Site Admin all get 403 when listing backups.)
 - [ ] Get the gateway's TLS key pin (laptop):
   ```
   openssl s_client -connect <gateway-ip>:443 </dev/null 2>/dev/null | openssl x509 -pubkey -noout \
@@ -64,7 +64,7 @@ openssl req -x509 -newkey rsa:4096 -days 3650 -subj "/CN=gateway-backup" \
 ## 4. First run (bootstrap)
 
 - [ ] Task Scheduler → select the task → **Run**. It pulls the newest existing weekly auto-backup without changing anything on the gateway.
-- [ ] If it fails with HTTP 401/403 on the list or download step, View Only isn't enough. Raise `<gateway-backup-account>` one role at a time until it works, and record the role that worked in `changes.md`. That's the account's real privilege.
+- [ ] If it fails with HTTP 401/403 on the list or download step, check the account's role (Network Full Management) and that it is a local account.
 - [ ] Check that `gateway-backups/manifest.json` exists and shows `"archive_check": "ok"`.
 
 ## 5. Laptop gate
