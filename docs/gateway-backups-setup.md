@@ -69,9 +69,20 @@ openssl req -x509 -newkey rsa:4096 -days 3650 -subj "/CN=gateway-backup" \
 
 ## 5. Laptop gate
 
-- [ ] Finder → Go → Connect to Server → `smb://<nas>/gateway-backups`, logged in as `<nas-reader-user>`.
-- [ ] In `private/change-window.conf`: `BACKUP_MANIFEST=/Volumes/gateway-backups/manifest.json`
+No mount needed: the gate fetches the manifest and the latest backup over the DSM API, as a read-only NAS account with read access to the backup share.
+
+- [ ] Get the NAS's TLS key pin (same command as the gateway's, with `<nas-ip>:5001`).
+- [ ] In `private/change-window.conf`:
+  ```
+  BACKUP_NAS_URL=https://<nas-ip>:5001
+  BACKUP_NAS_PIN='sha256//<pin>'
+  BACKUP_NAS_USER=<read-only NAS account>
+  BACKUP_NAS_PASSWORD_COMMAND='<absolute argv that prints its password>'
+  BACKUP_NAS_DIR=/<backup share>
+  ```
 - [ ] `scripts/change-window.sh status` should now report a `nas` restore point.
+
+(Alternative: mount the share read-only and set `BACKUP_MANIFEST=<mount>/manifest.json`.)
 
 ## 6. Daily schedule (agent, via change window)
 

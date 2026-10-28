@@ -7,7 +7,8 @@
 #
 # open refuses to run without a restore point younger than BACKUP_MAX_AGE_DAYS (default 3, set
 # in private/change-window.conf). Two sources qualify, checked in this order:
-#   1. BACKUP_MANIFEST: the NAS job's manifest.json on a read-only mount. Age is the gateway's
+#   1. The NAS job's manifest.json, fetched over the DSM API when BACKUP_NAS_URL is set (no mount
+#      needed), or read from a read-only mount at BACKUP_MANIFEST. Age is the gateway's
 #      backup creation time; the encrypted file must exist next to it, match its sha256 and
 #      have passed the job's archive check.
 #   2. The manual record (backup <file.unf>): still at its path with the same sha256. Age is the
@@ -30,6 +31,7 @@ backups="$root/private/backup-record.tsv"
 
 RO_USERNAME= RO_PASSWORD_COMMAND= RW_USERNAME= RW_PASSWORD_COMMAND=
 BACKUP_MAX_AGE_DAYS=3 BACKUP_MANIFEST=
+BACKUP_NAS_URL= BACKUP_NAS_PIN= BACKUP_NAS_USER= BACKUP_NAS_PASSWORD_COMMAND= BACKUP_NAS_DIR=
 # shellcheck disable=SC1090
 [ -f "$conf" ] && . "$conf"
 
@@ -38,12 +40,66 @@ sha() { shasum -a 256 "$1" | cut -d' ' -f1; }
 
 # Print "<source> <sha12> <age_hours>" for a qualifying restore point, or explain why none qualifies and fail.
 check_backup() {
-  if [ -n "$BACKUP_MANIFEST" ]; then
+  if [ -n "$BACKUP_NAS_URL" ]; then
+    nas_tmp=$(mktemp -d)
+    if r=$(fetch_nas "$nas_tmp" 2>&1) && r=$(BACKUP_MANIFEST="$nas_tmp/manifest.json" check_manifest 2>&1); then
+      rm -rf "$nas_tmp"; echo "nas $r"; return 0
+    fi
+    rm -rf "$nas_tmp"
+    echo "NAS: $r" >&2
+  elif [ -n "$BACKUP_MANIFEST" ]; then
     if r=$(check_manifest 2>&1); then echo "nas $r"; return 0; fi
     echo "NAS manifest: $r" >&2
   fi
   r=$(check_record) || return 1
   echo "manual $r"
+}
+
+# fetch_nas <dir>: download manifest.json and the backup it names from the NAS over the DSM File Station
+# API, as a read-only account, so no share has to be mounted. TLS is pinned to the NAS's public key.
+# The password comes from BACKUP_NAS_PASSWORD_COMMAND (an argv, run without a shell) and only travels on stdin.
+fetch_nas() {
+  python3 -I - "$1" "$BACKUP_NAS_URL" "$BACKUP_NAS_PIN" "$BACKUP_NAS_USER" "$BACKUP_NAS_PASSWORD_COMMAND" "$BACKUP_NAS_DIR" <<'EOF'
+import json, os, shlex, subprocess, sys, urllib.parse
+out, url, pin, user, pwcmd, share = sys.argv[1:]
+if not (pin.startswith("sha256//") and user and pwcmd and share.startswith("/")):
+    sys.exit("BACKUP_NAS_PIN, BACKUP_NAS_USER, BACKUP_NAS_PASSWORD_COMMAND and BACKUP_NAS_DIR are required")
+api = url.rstrip("/") + "/webapi/entry.cgi"
+curl = ["curl", "-sS", "--fail", "--max-time", "60", "--insecure", "--pinnedpubkey", pin, api, "--data-binary", "@-"]
+
+def call(params, dest=None):
+    r = subprocess.run(curl + (["-o", dest] if dest else []), input=urllib.parse.urlencode(params).encode(),
+                       capture_output=True)
+    if r.returncode:
+        sys.exit("NAS request failed: " + r.stderr.decode(errors="replace").strip()[:200])
+    return r.stdout
+
+pw = subprocess.run(shlex.split(pwcmd), capture_output=True, text=True, timeout=60)
+if pw.returncode or not pw.stdout.strip():
+    sys.exit("password command failed")
+login = json.loads(call({"api": "SYNO.API.Auth", "version": "6", "method": "login", "account": user,
+                         "passwd": pw.stdout.rstrip("\n"), "session": "FileStation", "format": "sid"}))
+if not login.get("success"):
+    sys.exit(f"NAS login failed: {login.get('error')}")
+sid = login["data"]["sid"]
+
+def download(name):
+    dest = os.path.join(out, name)
+    call({"api": "SYNO.FileStation.Download", "version": "2", "method": "download",
+          "path": json.dumps([share.rstrip("/") + "/" + name]), "mode": "download", "_sid": sid}, dest)
+    with open(dest, "rb") as f:
+        if f.read(10).startswith(b'{"error"'):
+            sys.exit(f"NAS refused to send {name}")
+
+try:
+    download("manifest.json")
+    name = os.path.basename(json.load(open(os.path.join(out, "manifest.json")))["latest"]["file"])
+    if not name.endswith(".unf.cms"):
+        sys.exit("manifest names an unexpected file")
+    download(name)
+finally:
+    call({"api": "SYNO.API.Auth", "version": "6", "method": "logout", "session": "FileStation", "_sid": sid})
+EOF
 }
 
 check_manifest() {

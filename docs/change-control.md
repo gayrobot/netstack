@@ -29,7 +29,8 @@ This is step 1. Where it's headed (a broker that holds credentials, self-expirin
 
 A window that can write to the gateway won't open without a recent off-box backup of it.
 
-- **Record a backup:** download one from UniFi OS (Settings → System → Backups → Download), store it off the gateway, then run `scripts/change-window.sh backup <file.unf>`. This records the path, the file's modification time and its sha256 in `private/backup-record.tsv`, plus a sha256 prefix in `change-windows.log`.
+- **NAS (normal case):** the NAS job stores a fresh, encrypted gateway backup every night. `open` fetches the job's manifest and that backup over the DSM API as a read-only NAS account (TLS pinned), then checks age, the archive check and the sha256. Nothing to do by hand. See [gateway-backups.md](gateway-backups.md).
+- **Manual fallback, record a backup:** download one from UniFi OS (Settings → System → Backups → Download), store it off the gateway, then run `scripts/change-window.sh backup <file.unf>`. This records the path, the file's modification time and its sha256 in `private/backup-record.tsv`, plus a sha256 prefix in `change-windows.log`.
 - **Gate:** `open` refuses unless the latest recorded backup is younger than `BACKUP_MAX_AGE_DAYS` (default 3, set in `private/change-window.conf`), still exists at its path, and still matches its sha256. The `OPEN` log line names the restore point it relied on.
 - **Why off-box:** the gateway's own weekly auto-backups live on the gateway, and cloud backup is off. If the gateway is what breaks, those copies go with it.
 - **Handle the file as a secret.** A `.unf` contains Wi-Fi passphrases, VPN keys and admin hashes, and its encryption uses a well-known static key, so treat it as plaintext. It's gitignored (`*.unf`, `private/`).
