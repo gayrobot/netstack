@@ -14,8 +14,18 @@ Template:
 - Approved by / when:
 ```
 
+## 2026-10-28: Rename one access switch (name only)
+- Status: proposed; owner asked for a window in chat 2026-10-28, but `change-window.sh open` is blocked (no usable off-box gateway backup on record)
+- Target: one access switch (recovered today after a physical reset and re-adopt); controller device name only
+- Why: after the reset it came back with the model name; the owner wants a role-based name
+- Diff: device name `<model default> -> <owner's chosen name>` via `rename_device`. No port, VLAN, firewall or gateway change
+- Window note: `open` enables server-wide `policy_update`, which also covers reboot, firmware upgrade and client deletion ([vetting](vetting/unifi-mcp.md), Finding 5). The agent applies only the rename. The category-scoped window entry above would narrow this
+- Rollback: rename it back
+- Verify (agent): `list_devices` shows the new name; the switch stays online with the same port table
+- Approved by / when: pending (owner's go-ahead to open the window is not a restore point)
+
 ## 2026-10-26: Gateway: agent account to View Only
-- Status: approved 2026-10-26; owner to apply in the console
+- Status: **applied 2026-10-28** by owner. Smoke test 2026-10-28: `list_networks`, `list_firewall_policies`, `list_clients` and `list_port_forwards` work; **`list_backups` returns 403**, so listing and downloading backups needs more than View Only. The remote-user VPN network also no longer appears in `list_networks` (5 networks instead of 6), so View Only hides some objects. Consequence: the backup job's account will hit the same 403 and needs the lowest role that can list backups
 - Target: the agent's local gateway account (used by the UniFi MCP)
 - Why: write access should come only from change windows; the account's current role is unknown
 - Diff: UniFi OS → Admins & Users → agent account → Network role **View Only**, no other app access, no remote/cloud access
