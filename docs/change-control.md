@@ -10,10 +10,12 @@ Each device has two MCP connections:
 
 | Connection | Account | Prompts |
 |---|---|---|
-| Gateway read (the UniFi plugin) | View Only | none |
-| Gateway write (`unifi-write`, hash-locked environment) | Network Site Admin; create and update on, delete off | the owner approves **every call** (an `ask` rule in the client) |
-| NAS read (`synology`) | non-admin | none; write tools denied |
-| NAS write (`synology-write`) | administrator | the owner approves **every call**; `synology_login` denied |
+| Gateway read (the UniFi plugin) | View Only | none. Its password comes through a read-only 1Password service account ([op-ro-read](../tools/op-ro-read/README.md)), so starting it doesn't prompt either |
+| Gateway write (`unifi-write`, hash-locked environment) | Network Site Admin; create and update on, delete off | **off until the owner turns writes on** ([write-gate](../tools/write-gate/README.md)); then one 1Password prompt when it starts, and the owner approves **every call** (an `ask` rule in the client) |
+| NAS read (`synology`) | non-admin | none, at start or per call (same service account); write tools denied |
+| NAS write (`synology-write`) | administrator | **off until the owner turns writes on**; then one 1Password prompt when it starts, and the owner approves **every call**; `synology_login` denied |
+
+**Turning writes on.** When a write is next, the agent tells the owner it's turning writes on for one connection and that a 1Password prompt is coming, then runs `write-gate on <connection>`. The real server starts in place in that session only, the owner approves the one 1Password prompt, and the write tools appear without a reconnect. Each call still needs the owner's click. The window lasts 60 minutes by default (max 240); after it, the real server stops once no call is in flight. While writes are off, each write connection is a stand-in with no tools. Details: [write-gate](../tools/write-gate/README.md).
 | NAS extras (`synology-extras`, first-party, gaps in the Synology MCP only; **proposed, not registered**) | administrator (the NAS write account) | per tool: read-only tools (`package_list`) need no prompt; anything that changes the NAS (`package_upgrade`) needs the owner's approval on **every call**. Exception EX-1 in [exceptions.md](exceptions.md): these reads need admin |
 
 What each tier needs:
