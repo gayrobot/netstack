@@ -14,6 +14,7 @@ Each device has two MCP connections:
 | Gateway write (`unifi-write`, hash-locked environment) | Network Site Admin; create and update on, delete off | the owner approves **every call** (an `ask` rule in the client) |
 | NAS read (`synology`) | non-admin | none; write tools denied |
 | NAS write (`synology-write`) | administrator | the owner approves **every call**; `synology_login` denied |
+| NAS packages (`nas-packages`, first-party; **proposed, not registered**) | administrator (the NAS write account) | the owner approves **every call**, including `package_list`, which needs admin (see `changes.md`) |
 
 What each tier needs:
 

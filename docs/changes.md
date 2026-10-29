@@ -14,6 +14,28 @@ Template:
 - Approved by / when:
 ```
 
+## 2026-10-28: First-party MCP for NAS package list and upgrade
+- Status: **proposed** (tier 3: it adds an agent control, so the owner registers it). Code, offline tests and vetting are in this PR; no live DSM call has been made yet
+- Target: agent client MCP config and permission rules; the NAS (Package Center, through the existing NAS write account)
+- Why: vendor security advisories (Synology-SA-26:14 was the trigger) are fixed by package updates. The vetted Synology MCP has no package tools, and SSH would give the agent a full shell on the NAS
+- Diff:
+  1. New `tools/nas-packages/` server with two tools, `package_list` and `package_upgrade` (upgrade only, Synology's servers only, dry run by default). Review: [vetting/nas-packages.md](vetting/nas-packages.md)
+  2. Owner registers it from `tools/nas-packages/mcp.example.json`, using the NAS write account's 1Password item. No new account
+  3. **List gating, owner's choice.** DSM needs an administrator even to list packages, which clashes with rule 5 (reads go on read connections, without admin):
+     - **A (recommended):** one server, `ask` on both tools. A documented rule 5 exception: "package_list needs admin, so it's prompted like a write." It's used rarely, so the extra click costs little
+     - **B:** a second entry exposing only `package_list` with no prompt. Faster, but it's a standing, unprompted admin credential guarded only by our own tool list, the pattern the Synology review flagged
+  4. Tier for `package_upgrade`, owner's choice: proposed **tier 1** (one package, from Synology, approved per call), logged here after each use with role names only; installed package names and versions go in `private/`
+- Rollback: remove the MCP entry and its permission rules. A package upgrade itself can't be rolled back from DSM
+- Verify: `package_list` returns the installed packages; a dry run reports the right from/to versions; one upgrade of a low-risk package, checked in Package Center
+- Approved by / when: pending
+
+## 2026-10-28: Apply vendor security updates for Synology-SA-26:14
+- Status: **closed 2026-10-28** after the owner checked Package Center. Details in `private/changes.md`
+- Target: the NAS
+- Why: [Synology-SA-26:14](https://www.synology.com/en-au/security/advisory/Synology_SA_26_14), critical remote code execution in some DSM packages
+- Diff: see `private/changes.md`
+- Approved by / when: n/a
+
 ## 2026-10-28: Backup job creates a fresh gateway backup each night
 - Status: **applied 2026-10-28.** Deployed on the NAS; first on-demand run stored a backup created the same minute, `archive_check: ok` (verified by the agent through the read-only NAS account). Test: on-demand create returned `rc: ok` in about 1 s; the download was a valid archive; the file does not join the auto-backup list and its name is fixed per controller version, so it is overwritten each run and nothing builds up. The updated job ran twice locally against the gateway (exit 0), and a **test decrypt** with the offline key reproduced the original file's hash exactly
 - Target: the NAS backup job; the gateway's network backups (via the backup account, Network Full Management)
