@@ -22,3 +22,5 @@ jobs:
         run: python3 -I tools/synology-extras/test_server.py -v
       - name: write-gate
         run: python3 -I tools/write-gate/test_write_gate.py -v
+      - name: op-rotate
+        run: python3 -I tools/op-rotate/test_op_rotate.py -v
