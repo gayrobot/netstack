@@ -1,9 +1,10 @@
 {
-  "_comment": "Example only. The owner registers the real entry in user settings (tier 3). Placeholders in <angle brackets>. mcpServers goes in the MCP config; permissions goes in the client's settings.json.",
+  "_comment": "Example only. The owner registers the real entry at local scope for this repo, like the other NAS connections, not user scope (tier 3). It runs behind write-gate, so it has no tools until the agent runs `write-gate on synology-extras`. Placeholders in <angle brackets>. mcpServers goes in the MCP config; permissions goes in the client's settings.json.",
   "mcpServers": {
     "synology-extras": {
-      "command": "/usr/bin/python3",
-      "args": ["-I", "<absolute path to repo>/tools/synology-extras/server.py"],
+      "command": "<absolute path to python3>",
+      "args": ["-I", "<home>/.local/bin/write-gate", "run", "--name", "synology-extras", "--",
+               "/usr/bin/python3", "-I", "<absolute path to repo>/tools/synology-extras/server.py"],
       "env": {
         "NAS_URL": "https://<nas address>:5001",
         "NAS_PIN": "sha256//<base64 SPKI hash, same value as BACKUP_NAS_PIN>",

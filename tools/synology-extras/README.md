@@ -15,9 +15,10 @@ Tools today (Package Center, for vendor security updates such as Synology-SA-26:
 - **One NAS**, set by the environment. No tool takes a host or URL.
 - **The password** comes from `NAS_PASSWORD_COMMAND` (run without a shell), is sent on curl's stdin, and never appears in argv, tool arguments or output.
 - **Every tool here needs an administrator**, because that's usually why the read connector can't do it (DSM error 105). So there's no read/write pair: one connector, and a permission rule per tool. Read-only tools are `allow`; anything that changes the NAS is `ask`. That's exception EX-1 in [docs/exceptions.md](../../docs/exceptions.md), approved by the owner 2026-10-28.
+- **Off until needed.** Because it holds the admin login, it runs behind [write-gate](../write-gate/README.md) like the write connections (owner's choice, 2026-10-29). Sessions start it as a stand-in with no tools. When a package check or upgrade is next, the agent tells the owner and runs `write-gate on synology-extras`; the tools then appear for that session only, until the window ends. Starting it reads no password: `NAS_PASSWORD_COMMAND` runs on each tool call, so the 1Password prompt comes with the call, not with `on`.
 - `package_upgrade` is a dry run unless the call passes `"dry_run": false`, so the approval prompt shows that explicitly.
 
-Setup is in [mcp.example.json](mcp.example.json). Registering the server, its credential and its permission rules is a tier 3 step for the owner.
+Setup is in [mcp.example.json](mcp.example.json): local scope for this repo, wrapped in `write-gate run --name synology-extras`. Registering the server, its credential and its permission rules is a tier 3 step for the owner.
 
 Tests (offline, DSM is faked):
 
@@ -31,3 +32,5 @@ python3 -I tools/synology-extras/test_server.py
 - That `SYNO.Core.Package.Server` `list` returns `link`, `md5` and `size` for packages in the official Synology channel. If it doesn't, the tool refuses to upgrade; it doesn't guess.
 - Accounts with 2-step verification: login doesn't send an OTP, so the account has to be one without 2FA, like the existing agent write account.
 - Whether DSM restarts a package after the upgrade the same way the UI does (`installrunpackage=true` is meant to).
+- How often 1Password asks again when the password is read on each call (once per call, or once for a while after an approval).
+- That this server works behind write-gate: the gate is tested with a fake server, and live with `unifi-write` only.
