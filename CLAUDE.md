@@ -14,7 +14,7 @@ A home network (UniFi Dream Machine Pro, a Mac Pro VM host and the VMs on it) ru
 2. **Don't SSH into the UDM.** Use the UniFi API through the MCP, which is a narrower surface and easier to audit.
 3. **Don't read, print or `cat` `.env`** or any other credential file. Use `.env.example` to see which variables exist.
 4. **Log every proposed change in `docs/changes.md`**, including ones that get rejected.
-5. **Read with the read connections, write with the write connections.** Each device has a read connection (read-only account, no prompts) and a write connection (write account; the owner approves every call in the client). Never use a write connection for reads. Tiers (`docs/change-control.md`):
+5. **Read with the read connections, write with the write connections.** Each device has a read connection (read-only account, no prompts) and a write connection (write account; the owner approves every call in the client). Never use a write connection for reads. Write connections are off until a write is next: tell the owner a 1Password prompt is coming, then run `write-gate on <connection>` yourself and wait for the tools to appear (`write-gate status`). Tiers (`docs/change-control.md`):
    - **Tier 1** (names, labels, a port forward toggle, a DHCP reservation, restarting one device): propose the call, the owner approves it, then log it in `docs/changes.md`.
    - **Tier 2** (everything in rule 1, plus NAS share permissions): a `changes.md` entry and chat approval first, then `scripts/change-window.sh open "<title>"` (checks for a fresh restore point and logs), apply, verify, `close`.
    - **Tier 3** (accounts, authentication, backups, snapshots, these controls themselves): never through the agent. Propose; the owner does it.
