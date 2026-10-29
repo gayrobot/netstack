@@ -38,9 +38,12 @@ install -m 755 tools/op-rotate/op_rotate.py ~/.local/bin/op-rotate
 
 Then write the config, `op-rotate seed <current service account> <its expiry>`, and load the agent from `op-rotate plist`. The owner's private install script does all of this.
 
+## Verified
+
+- 2026-10-29, install test: `op` started by launchd gets the 1Password approval prompt, and a full rotation through launchd works
+
 ## Couldn't verify
 
-- That the 1Password app shows its approval prompt for `op` started by launchd rather than a terminal (expected: yes, launchd agents run in the owner's login session). The install test rotation answers this
 - How long `op` waits for that prompt before giving up (op-rotate stops waiting at 5 minutes)
 - Whether service-account names must be unique (op-rotate adds the time if a name would repeat on the same day)
 - Whether 1Password limits how many service accounts an account can have, expired ones included (about four a year are created)

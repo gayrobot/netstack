@@ -40,4 +40,4 @@ Reviewed 2026-10-29. Code: [tools/op-rotate](../../tools/op-rotate/README.md).
 
 ## Couldn't verify
 
-- See the tool's README: the launchd prompt path, `op`'s own prompt timeout, name uniqueness, and any limit on service-account count
+- See the tool's README: `op`'s own prompt timeout, name uniqueness, and any limit on service-account count
