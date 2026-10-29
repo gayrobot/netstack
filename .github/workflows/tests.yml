@@ -20,3 +20,5 @@ jobs:
           persist-credentials: false
       - name: synology-extras
         run: python3 -I tools/synology-extras/test_server.py -v
+      - name: write-gate
+        run: python3 -I tools/write-gate/test_write_gate.py -v

@@ -10,10 +10,12 @@ Each device has two MCP connections:
 
 | Connection | Account | Prompts |
 |---|---|---|
-| Gateway read (the UniFi plugin) | View Only | none |
-| Gateway write (`unifi-write`, hash-locked environment) | Network Site Admin; create and update on, delete off | the owner approves **every call** (an `ask` rule in the client) |
-| NAS read (`synology`) | non-admin | none; write tools denied |
-| NAS write (`synology-write`) | administrator | the owner approves **every call**; `synology_login` denied |
+| Gateway read (the UniFi plugin) | View Only | none. Its password comes through a read-only 1Password service account ([op-ro-read](../tools/op-ro-read/README.md)), so starting it doesn't prompt either |
+| Gateway write (`unifi-write`, hash-locked environment) | Network Site Admin; create and update on, delete off | **off until the owner turns writes on** ([write-gate](../tools/write-gate/README.md)); then one 1Password prompt when it starts, and the owner approves **every call** (an `ask` rule in the client) |
+| NAS read (`synology`) | non-admin | none, at start or per call (same service account); write tools denied |
+| NAS write (`synology-write`) | administrator | **off until the owner turns writes on**; then one 1Password prompt when it starts, and the owner approves **every call**; `synology_login` denied |
+
+**Turning writes on.** The owner runs `write-gate on [minutes]` (default 60, max 240), then reconnects the write connection in `/mcp` or starts a new session. While writes are off, each write connection is a stand-in with no tools, so if the agent finds no write tools, writes are off; it asks the owner and doesn't turn them on itself. A write connection that's already running stays up after the window ends; the window only decides the next start.
 | NAS extras (`synology-extras`, first-party, gaps in the Synology MCP only; **proposed, not registered**) | administrator (the NAS write account) | per tool: read-only tools (`package_list`) need no prompt; anything that changes the NAS (`package_upgrade`) needs the owner's approval on **every call**. Exception EX-1 in [exceptions.md](exceptions.md): these reads need admin |
 
 What each tier needs:
