@@ -9,12 +9,31 @@ It's built around a UniFi gateway and a Synology NAS, managed through MCP server
 | Control | What it does | Where |
 |---|---|---|
 | **Rules file** | Read-only phase, no SSH to the gateway, no reading `.env`, log every change, verified vs. inferred | [`CLAUDE.md`](CLAUDE.md) (also read via [`AGENTS.md`](AGENTS.md)) |
-| **Read/write split** | Read connections use read-only accounts and never prompt. Write connections use separate accounts, and the owner approves every call. Changes are tiered by risk | [`docs/change-control.md`](docs/change-control.md) |
+| **Read/write split** | Read connections use read-only accounts and never prompt. Write connections use separate accounts, and the owner approves every call. Changes are tiered by risk ([see the tiers](#how-changes-are-governed-the-tiers)) | [`docs/change-control.md`](docs/change-control.md) |
 | **Restore point gate** | Risky (tier 2) changes need a fresh, hash-verified, off-box gateway backup first | same script; [`docs/gateway-backups.md`](docs/gateway-backups.md) |
 | **Automated backups** | The NAS pulls the gateway's auto-backup daily over a pinned TLS key, checks that it's a valid archive, encrypts it to an offline key, and stores it under immutable snapshots | [`scripts/nas/pull-gateway-backup.sh`](scripts/nas/pull-gateway-backup.sh), [`docs/gateway-backups-setup.md`](docs/gateway-backups-setup.md) |
 | **Change log** | Every proposal with diff, rollback, verification and approval | [`docs/changes.md`](docs/changes.md) |
 | **Public/private split** | Real hostnames and inventory live in a gitignored `private/`; hooks block commits that leak them, and they fail closed | [`scripts/check-public.sh`](scripts/check-public.sh), [`docs/redaction.md`](docs/redaction.md) |
 | **Supply-chain vetting** | Every MCP server is reviewed and pinned before use | [`docs/vetting/`](docs/vetting/) |
+
+## How changes are governed: the tiers
+
+Everything the agent does falls into one of four tiers, based on how much damage it could do and how easily it can be undone. The tier decides who acts and what the owner has to do.
+
+| Tier | Examples | Who does it | What the owner does |
+|---|---|---|---|
+| **0: Read** | Inventory, health checks, listing config | Agent, on the read connections (read-only accounts) | Nothing |
+| **1: Small, reversible** | Rename a device, change a label, toggle a port forward, add a DHCP reservation, restart one device | Agent, on a write connection | Click **Allow** on the call. The agent then logs it in [`docs/changes.md`](docs/changes.md) |
+| **2: Can break things** | Firewall, VLAN, DHCP scopes, WAN, VPN, Wi-Fi, routing, NAS share permissions | Agent, after a written proposal | Approve the `changes.md` entry in chat, run `scripts/change-window.sh open` (refuses without a fresh off-box backup), click Allow on each call, then run `close` |
+| **3: The controls themselves** | Accounts, authentication, backups, snapshots, the rules and these tiers | The owner, by hand | Do it yourself. The agent can only propose |
+
+Three ideas sit behind the table:
+
+- **Read and write are separate connections.** Each device has a read connection that never prompts and a write connection where every call needs an approval. The agent never uses a write connection for a read.
+- **Approvals are per change.** One approval covers one change, and the agent logs every proposal in git, including the ones that get rejected.
+- **The agent can't loosen its own controls.** Accounts, backups and the rules themselves are Tier 3, so changing them is always the owner's action.
+
+Details: [`docs/change-control.md`](docs/change-control.md). Rules that need an exception go through [`docs/exceptions.md`](docs/exceptions.md). The longer-term design, where some Tier 1 approvals become automatic, is in [`docs/jit-design.md`](docs/jit-design.md).
 
 ## Quick start
 
