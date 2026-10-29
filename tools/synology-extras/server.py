@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""nas-packages: a two-tool MCP server for DSM Package Center (list, upgrade).
+"""synology-extras: DSM tools the third-party Synology MCP doesn't have.
+
+Scope rule: only gaps. If upstream mcp-server-synology adds an equivalent tool, the
+one here is retired (docs/vetting/third-party-upgrades.md). Tools today: Package
+Center list and upgrade.
 
 Stdlib only, stdio transport (newline-delimited JSON-RPC). Talks to one NAS, set by
 the environment, never by a tool argument. Every request goes through curl with TLS
@@ -66,13 +70,13 @@ class DSM:
     def __enter__(self):
         pw = subprocess.run(self.pwcmd, capture_output=True, check=True).stdout.decode().rstrip("\n")
         data = self.call({"api": "SYNO.API.Auth", "version": "6", "method": "login", "account": self.user,
-                          "passwd": pw, "session": "nas-packages", "format": "sid"})
+                          "passwd": pw, "session": "synology-extras", "format": "sid"})
         self.sid = data["sid"]
         return self
 
     def __exit__(self, *exc):
         try:
-            self.call({"api": "SYNO.API.Auth", "version": "6", "method": "logout", "session": "nas-packages"})
+            self.call({"api": "SYNO.API.Auth", "version": "6", "method": "logout", "session": "synology-extras"})
         except DSMError:
             pass
 
@@ -172,7 +176,7 @@ def handle(msg):
     if method == "initialize":
         result = {"protocolVersion": msg.get("params", {}).get("protocolVersion", PROTOCOL_VERSION),
                   "capabilities": {"tools": {}},
-                  "serverInfo": {"name": "nas-packages", "version": "0.1.0"}}
+                  "serverInfo": {"name": "synology-extras", "version": "0.1.0"}}
     elif method == "ping":
         result = {}
     elif method == "tools/list":

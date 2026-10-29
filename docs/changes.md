@@ -14,20 +14,27 @@ Template:
 - Approved by / when:
 ```
 
-## 2026-10-28: First-party MCP for NAS package list and upgrade
+## 2026-10-28: Upgrade process for third-party MCPs
+- Status: **proposed** (tier 3: it changes how the agent's controls are maintained)
+- Target: process only; [vetting/third-party-upgrades.md](vetting/third-party-upgrades.md)
+- Why: nothing defines what happens when `mcp-server-synology` or the UniFi MCP releases a new version, and two of the three connectors aren't fully pinned (their dependencies float under `uvx`)
+- Diff: no version changes in this entry. Adds the upgrade path (provenance, tag diff, tool inventory diff with new tools denied until reviewed, `synology-extras` overlap check, new lock, addendum, owner switch, smoke test), an emergency path, and a "gaps to close first" list (run the Synology connectors and the UniFi read plugin from hash locks; turn off plugin auto-update)
+- Rollback: revert the doc
+- Approved by / when: pending
+
+## 2026-10-28: First-party synology-extras MCP (package list and upgrade)
 - Status: **proposed** (tier 3: it adds an agent control, so the owner registers it). Code, offline tests and vetting are in this PR; no live DSM call has been made yet
 - Target: agent client MCP config and permission rules; the NAS (Package Center, through the existing NAS write account)
 - Why: vendor security advisories (Synology-SA-26:14 was the trigger) are fixed by package updates. The vetted Synology MCP has no package tools, and SSH would give the agent a full shell on the NAS
 - Diff:
-  1. New `tools/nas-packages/` server with two tools, `package_list` and `package_upgrade` (upgrade only, Synology's servers only, dry run by default). Review: [vetting/nas-packages.md](vetting/nas-packages.md)
-  2. Owner registers it from `tools/nas-packages/mcp.example.json`, using the NAS write account's 1Password item. No new account
-  3. **List gating, owner's choice.** DSM needs an administrator even to list packages, which clashes with rule 5 (reads go on read connections, without admin):
-     - **A (recommended):** one server, `ask` on both tools. A documented rule 5 exception: "package_list needs admin, so it's prompted like a write." It's used rarely, so the extra click costs little
-     - **B:** a second entry exposing only `package_list` with no prompt. Faster, but it's a standing, unprompted admin credential guarded only by our own tool list, the pattern the Synology review flagged
-  4. Tier for `package_upgrade`, owner's choice: proposed **tier 1** (one package, from Synology, approved per call), logged here after each use with role names only; installed package names and versions go in `private/`
+  1. New `tools/synology-extras/` server, starting with two tools, `package_list` and `package_upgrade` (upgrade only, Synology's servers only, dry run by default). Review: [vetting/synology-extras.md](vetting/synology-extras.md)
+  2. Owner registers it from `tools/synology-extras/mcp.example.json`, using the NAS write account's 1Password item. No new account
+  3. **Gating per tool, one connector** (owner, 2026-10-28). DSM needs an administrator even to list packages, so `package_list` runs on the admin login with an `allow` rule (no prompt), and `package_upgrade` has an `ask` rule. This is a rule 5 exception for read-only tools in `synology-extras` only: the password never reaches the agent, and the only way to widen the tool set is a reviewed PR
+  4. **Scope:** `synology-extras` holds only what the third-party Synology MCP can't do. Overlaps are retired when upstream catches up (see [vetting/third-party-upgrades.md](vetting/third-party-upgrades.md))
+  5. Tier for `package_upgrade`, owner's choice: proposed **tier 1** (one package, from Synology, approved per call), logged here after each use with role names only; installed package names and versions go in `private/`
 - Rollback: remove the MCP entry and its permission rules. A package upgrade itself can't be rolled back from DSM
 - Verify: `package_list` returns the installed packages; a dry run reports the right from/to versions; one upgrade of a low-risk package, checked in Package Center
-- Approved by / when: pending
+- Approved by / when: design and gating, owner, in chat, 2026-10-28 ("I would like to do synology-extras", ungated list). Registration still pending (tier 3, owner)
 
 ## 2026-10-28: Apply vendor security updates for Synology-SA-26:14
 - Status: **closed 2026-10-28** after the owner checked Package Center. Details in `private/changes.md`

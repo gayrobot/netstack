@@ -1,9 +1,9 @@
 {
   "_comment": "Example only. The owner registers the real entry in user settings (tier 3). Placeholders in <angle brackets>. mcpServers goes in the MCP config; permissions goes in the client's settings.json.",
   "mcpServers": {
-    "nas-packages": {
+    "synology-extras": {
       "command": "/usr/bin/python3",
-      "args": ["-I", "<absolute path to repo>/tools/nas-packages/server.py"],
+      "args": ["-I", "<absolute path to repo>/tools/synology-extras/server.py"],
       "env": {
         "NAS_URL": "https://<nas address>:5001",
         "NAS_PIN": "sha256//<base64 SPKI hash, same value as BACKUP_NAS_PIN>",
@@ -13,9 +13,7 @@
     }
   },
   "permissions": {
-    "ask": [
-      "mcp__nas-packages__package_list",
-      "mcp__nas-packages__package_upgrade"
-    ]
+    "allow": ["mcp__synology-extras__package_list"],
+    "ask": ["mcp__synology-extras__package_upgrade"]
   }
 }

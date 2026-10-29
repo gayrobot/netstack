@@ -1,11 +1,11 @@
-# Vetting: nas-packages (first-party NAS package MCP)
+# Vetting: synology-extras (first-party, gaps in the Synology MCP)
 
 **Reviewed:** 2026-10-28, against the [checklist](README.md). The author is the agent, so the owner's PR review is the independent review.
 **Verdict:** **OK with conditions** (below). Not registered yet.
 
 ## Identity and provenance
 
-- [x] Source: this repo, [`tools/nas-packages/server.py`](../../tools/nas-packages/server.py), one file, first-party. License: the repo's.
+- [x] Source: this repo, [`tools/synology-extras/server.py`](../../tools/synology-extras/server.py), one file, first-party. License: the repo's.
 - [x] What gets installed: nothing. The client runs the file from a checkout of `main` with the system `python3 -I`.
 - [x] Artifact traced to source: the source is the artifact. Run it from a checkout of a merged commit, not from a branch.
 - [x] Installed files match: n/a (no package).
@@ -35,12 +35,12 @@
 
 ## Risks that stay
 
-- An administrator credential sits behind a tool surface we wrote. A bug, or a later edit that adds a tool, widens it. Mitigation: `ask` on every tool, and any change to `server.py` means a new review (rule 3 in the README).
+- An administrator credential sits behind a tool surface we wrote, and `package_list` uses it with no prompt. A bug, or a later edit that adds a tool, widens it. Mitigation: `ask` on every tool that changes anything, any change to `server.py` means a new review (rule 3 in the README), and the agent never sees the password.
 - A package upgrade can't be rolled back from DSM. Synology's package server and code signing (`check_codesign=true`) are the supply-chain trust here, the same as clicking Update in Package Center.
 
 ## Conditions
 
-1. Register it with an `ask` rule on **both** tools (or the alternative the owner picks in `changes.md`; see "list gating").
+1. Register it with `allow` on `package_list` and `ask` on `package_upgrade` (owner's choice, 2026-10-28). Every tool added later is `ask` unless it's read-only and the owner approves it as `allow`.
 2. Use the existing NAS write account. Don't create a new admin.
 3. Run from a checkout of merged `main`.
 4. First live use runs in this order, with the owner watching: `package_list`, a dry run, then one real upgrade of a low-risk package. Record the result here as an addendum.
