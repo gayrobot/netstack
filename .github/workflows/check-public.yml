@@ -1,0 +1,39 @@
+# Server-side copy of the pre-commit check: scan the full history for private terms.
+# The denylist comes from the DENYLIST repository secret (the contents of
+# private/denylist.txt). Without it the job fails, like the hooks do.
+# Logs on a public repo are public, so the scan's output is discarded: a failure
+# says only that something matched. Run scripts/check-public.sh tree locally to see what.
+name: check-public
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Write denylist
+        env:
+          DENYLIST: ${{ secrets.DENYLIST }}
+        run: |
+          if [ -z "$DENYLIST" ]; then
+            echo "DENYLIST secret is not set; failing closed." >&2
+            exit 1
+          fi
+          mkdir -p private
+          printf '%s\n' "$DENYLIST" > private/denylist.txt
+      - name: Scan history
+        run: |
+          if ! sh scripts/check-public.sh tree > /dev/null 2>&1; then
+            echo "check-public found a private term. Run 'scripts/check-public.sh tree' locally to see it." >&2
+            exit 1
+          fi

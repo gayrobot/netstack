@@ -23,6 +23,7 @@ This repo documents how the network is governed, not a map of the house. Specifi
 
 ## Limits
 
-- Hooks are local and can be skipped with `--no-verify`. CLAUDE.md forbids that, but a server-side check (a CI job with the denylist as a secret) would be the real enforcement.
+- Hooks are local and can be skipped with `--no-verify`. CLAUDE.md forbids that. `.github/workflows/check-public.yml` repeats the full-history scan on every PR and push to `main`, with the denylist from the `DENYLIST` secret. It discards the scan output, because logs on a public repo are public. It runs after a branch is pushed, so it stops a leak reaching `main`, not reaching GitHub; the local hooks are still the first line.
+- Whether the CI job blocks a merge depends on branch protection requiring it, which the owner sets in GitHub.
 - A term not on the list isn't caught. New hostnames and services need to be added when they appear.
 - Nothing can un-publish a pushed commit. If something leaks, rotate what can be rotated and treat the rest as public.
