@@ -166,13 +166,16 @@ Template:
 - Approved by / when: owner, in chat, 2026-10-26 (design; each device step still runs as its own step)
 
 ## 2026-10-26: Disable stale WAN port forwards to the NAS
-- Status: proposed
+- Status: **applied 2026-10-28** (about 03:14 UTC on 2026-10-29). Both rules disabled, not deleted
 - Target: gateway, two port-forward rules to the NAS
 - Why: they expose the NAS to the internet on two ports; the service they were for now runs behind a VPN tunnel in the app VM
-- Diff: `enabled: true -> false` on both (toggle, not delete)
-- Rollback: toggle both back on
-- Check first: whether anything on the NAS still uses those ports
-- Approved by / when: pending
+- Diff:
+  1. Before (read connection): both rules enabled, TCP+UDP, any source
+  2. Write 1 and write 2 (write connection, `unifi_toggle_port_forward`, `confirm: true`), one per rule. Approval prompt on each; both returned `enabled: false`
+  3. Verify (read connection): both rules listed with `enabled: false`; nothing else changed
+- Rollback: toggle both back on (rules kept for that reason)
+- Check first: **skipped.** Nobody checked whether anything on the NAS still uses those ports. The service they were for moved behind the VPN, so nothing should; if something breaks, this is the first suspect
+- Approved by / when: owner, 2026-10-28, in chat ("Yes, close them"), then Allow on each prompt
 
 ## 2026-10-26: Disable rpcbind on the app VM
 - Status: proposed
