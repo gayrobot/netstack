@@ -26,6 +26,7 @@ A home network (UniFi Dream Machine Pro, a Mac Pro VM host and the VMs on it) ru
 
 ## Layout
 
+- `docs/strategy.md` + `docs/backlog.md`: what we're protecting, from what, in what order; the ordered list of work. Start here
 - `docs/network.md`: VLANs, zones, inbound exposure (role names)
 - `docs/hosts/`: one page per host role
 - `docs/changes.md`: change log (proposed, approved, applied, rejected)
