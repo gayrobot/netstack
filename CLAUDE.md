@@ -21,7 +21,8 @@ A home network (UniFi Dream Machine Pro, a Mac Pro VM host and the VMs on it) ru
 6. **Public vs. private.** Real hostnames, account names, service and container names, and the exact inventory go in `private/` (gitignored). Tracked files use role names only. See `docs/redaction.md`. No MACs, public IPs or IPv6 prefixes, passphrases, keys or serials anywhere tracked.
 7. **Never bypass the hooks** (`--no-verify`). If `scripts/check-public.sh` blocks a commit, fix the content.
 8. **Separate verified from inferred.** Every doc ends with a "Couldn't verify" list.
-9. **Every repo change goes through a pull request.** Work on a branch, run `scripts/check-public.sh tree`, push the branch and open a PR. Never commit or push to `main` directly. The owner reviews and merges; the `check-public` CI job must pass first.
+9. **Every repo change goes through a pull request.** Work on a branch, run `scripts/check-public.sh tree`, push the branch and open a PR. Never commit or push to `main` directly. The owner reviews and merges; the `check-public` and `tests` CI jobs must pass first.
+10. **`synology-extras` only fills gaps** in the third-party Synology MCP. Never add a tool that MCP already has. Any upgrade of that MCP must settle every overlapping tool (one path per action, keep the safer one) as described in `docs/vetting/synology-mcp-upgrades.md`. The `CHECKED_AGAINST` test enforces this.
 
 ## Layout
 
@@ -29,7 +30,7 @@ A home network (UniFi Dream Machine Pro, a Mac Pro VM host and the VMs on it) ru
 - `docs/hosts/`: one page per host role
 - `docs/changes.md`: change log (proposed, approved, applied, rejected)
 - `docs/change-control.md` + `scripts/change-window.sh`: write tiers and the restore-point gate; `docs/change-windows.log` is its audit log
-- `docs/vetting/`: supply-chain reviews of every MCP server and skill before it's used; `third-party-upgrades.md` for upgrades
+- `docs/vetting/`: supply-chain reviews of every MCP server and skill before it's used; `synology-mcp-upgrades.md` for upgrading the Synology MCP
 - `tools/`: first-party code (`tools/synology-extras/`: DSM tools the third-party Synology MCP lacks)
 - `docs/redaction.md`: how the public/private split is enforced
 - `private/`: real specifics, raw dumps, the denylist (never committed)

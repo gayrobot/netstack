@@ -2,8 +2,8 @@
 """synology-extras: DSM tools the third-party Synology MCP doesn't have.
 
 Scope rule: only gaps. If upstream mcp-server-synology adds an equivalent tool, the
-one here is retired (docs/vetting/third-party-upgrades.md). Tools today: Package
-Center list and upgrade.
+overlap is settled in the upgrade PR (docs/vetting/synology-mcp-upgrades.md). Tools
+today: Package Center list and upgrade.
 
 Stdlib only, stdio transport (newline-delimited JSON-RPC). Talks to one NAS, set by
 the environment, never by a tool argument. Every request goes through curl with TLS
@@ -166,6 +166,14 @@ TOOLS = {
             "required": ["package_id"], "additionalProperties": False},
         "annotations": {"readOnlyHint": False, "destructiveHint": False, "idempotentHint": True},
     }),
+}
+
+# The mcp-server-synology version each tool was last checked against for overlap.
+# test_server.py fails if this differs from the pin in docs/vetting/locks/mcp-server-synology.in,
+# so an upgrade of that MCP can't land without rechecking every tool here.
+CHECKED_AGAINST = {
+    "package_list": "1.8.0",
+    "package_upgrade": "1.8.0",
 }
 
 

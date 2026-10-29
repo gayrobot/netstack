@@ -14,13 +14,17 @@ Template:
 - Approved by / when:
 ```
 
-## 2026-10-28: Upgrade process for third-party MCPs
-- Status: **proposed** (tier 3: it changes how the agent's controls are maintained)
-- Target: process only; [vetting/third-party-upgrades.md](vetting/third-party-upgrades.md)
-- Why: nothing defines what happens when `mcp-server-synology` or the UniFi MCP releases a new version, and two of the three connectors aren't fully pinned (their dependencies float under `uvx`)
-- Diff: no version changes in this entry. Adds the upgrade path (provenance, tag diff, tool inventory diff with new tools denied until reviewed, `synology-extras` overlap check, new lock, addendum, owner switch, smoke test), an emergency path, and a "gaps to close first" list (run the Synology connectors and the UniFi read plugin from hash locks; turn off plugin auto-update)
-- Rollback: revert the doc
-- Approved by / when: pending
+## 2026-10-28: Upgrade process for the Synology MCP, and overlap with synology-extras
+- Status: **proposed** (tier 3: it changes how the agent's controls are maintained). The overlap rule itself was decided by the owner in chat
+- Target: process; [vetting/synology-mcp-upgrades.md](vetting/synology-mcp-upgrades.md), `CLAUDE.md` rule 10, `tools/synology-extras/test_server.py`
+- Why: nothing defined what happens when `mcp-server-synology` releases a new version, or what happens when it gains a tool `synology-extras` already has. A future session won't remember this conversation, so it's written down and enforced by a test
+- Diff:
+  1. Upgrade path: provenance, tag diff, new tools blocked until reviewed, overlap check, new lock, addendum, owner switch, smoke test, rollback; plus an emergency path
+  2. Overlap rule: one path per action, keep the safer one. Retire ours if theirs is as narrow and safe, deny theirs if it's broader, decide per tool if mixed
+  3. Tripwire: each `synology-extras` tool records the upstream version it was checked against; a test fails if that doesn't match the pin in `locks/mcp-server-synology.in`
+  4. Gap noted, not changed: both Synology connectors still start under `uvx` with floating dependencies
+- Rollback: revert the doc, the rule and the test
+- Approved by / when: overlap rule, owner, in chat, 2026-10-28 ("Make the PR"); the process as a whole pending review of this PR
 
 ## 2026-10-28: First-party synology-extras MCP (package list and upgrade)
 - Status: **proposed** (tier 3: it adds an agent control, so the owner registers it). Code, offline tests and vetting are in this PR; no live DSM call has been made yet
@@ -30,7 +34,7 @@ Template:
   1. New `tools/synology-extras/` server, starting with two tools, `package_list` and `package_upgrade` (upgrade only, Synology's servers only, dry run by default). Review: [vetting/synology-extras.md](vetting/synology-extras.md)
   2. Owner registers it from `tools/synology-extras/mcp.example.json`, using the NAS write account's 1Password item. No new account
   3. **Gating per tool, one connector** (owner, 2026-10-28). DSM needs an administrator even to list packages, so `package_list` runs on the admin login with an `allow` rule (no prompt), and `package_upgrade` has an `ask` rule. This is a rule 5 exception for read-only tools in `synology-extras` only: the password never reaches the agent, and the only way to widen the tool set is a reviewed PR
-  4. **Scope:** `synology-extras` holds only what the third-party Synology MCP can't do. Overlaps are retired when upstream catches up (see [vetting/third-party-upgrades.md](vetting/third-party-upgrades.md))
+  4. **Scope:** `synology-extras` holds only what the third-party Synology MCP can't do. Overlaps are retired when upstream catches up (see [vetting/synology-mcp-upgrades.md](vetting/synology-mcp-upgrades.md))
   5. Tier for `package_upgrade`, owner's choice: proposed **tier 1** (one package, from Synology, approved per call), logged here after each use with role names only; installed package names and versions go in `private/`
 - Rollback: remove the MCP entry and its permission rules. A package upgrade itself can't be rolled back from DSM
 - Verify: `package_list` returns the installed packages; a dry run reports the right from/to versions; one upgrade of a low-risk package, checked in Package Center

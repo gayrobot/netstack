@@ -107,6 +107,18 @@ class Tests(unittest.TestCase):
                                "params": {"name": "package_list", "arguments": {}}})["result"]
         self.assertTrue(r["isError"])
 
+    def test_every_tool_checked_against_pinned_upstream(self):
+        # Tripwire for CLAUDE.md rule 10: bump CHECKED_AGAINST only after rechecking overlap.
+        lock_in = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                               "..", "..", "docs", "vetting", "locks", "mcp-server-synology.in")
+        with open(lock_in) as f:
+            pins = [l.split("==", 1)[1].strip() for l in f if l.startswith("mcp-server-synology==")]
+        self.assertEqual(len(pins), 1, "expected exactly one mcp-server-synology== pin")
+        self.assertEqual(set(server.CHECKED_AGAINST), set(server.TOOLS), "every tool needs a CHECKED_AGAINST entry")
+        stale = {t: v for t, v in server.CHECKED_AGAINST.items() if v != pins[0]}
+        self.assertFalse(stale, f"mcp-server-synology is pinned at {pins[0]}; recheck these tools for overlap "
+                                f"(docs/vetting/synology-mcp-upgrades.md), then bump CHECKED_AGAINST: {stale}")
+
     def test_version_compare(self):
         self.assertGreater(server.version_key("8.2.35-0171"), server.version_key("8.2.30-0100"))
         self.assertGreater(server.version_key("30000002.3.19-20333"), server.version_key("30000002.3.18-20000"))

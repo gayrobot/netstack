@@ -6,7 +6,7 @@ Anything an agent loads can act with the agent's access. Nothing gets installed 
 
 1. **Vet before install.** Install only after the review is written and its verdict is OK.
 2. **Pin what runs.** Use an exact version and, for packages, a hash-locked requirements file (`locks/`), installed with `--require-hashes --no-build`.
-3. **Re-vet on change.** A version bump, a new dependency resolution or a new permission means a new review, or a dated addendum to the existing one. How upgrades run: [third-party-upgrades.md](third-party-upgrades.md).
+3. **Re-vet on change.** A version bump, a new dependency resolution or a new permission means a new review, or a dated addendum to the existing one. How the Synology MCP is upgraded: [synology-mcp-upgrades.md](synology-mcp-upgrades.md).
 4. **Least privilege first.** Every review ends with the narrowest account and settings the tool can run with.
 
 ## Checklist

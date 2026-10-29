@@ -2,7 +2,7 @@
 
 A first-party MCP server for the DSM features the third-party Synology MCP (`mcp-server-synology`, connectors `synology` and `synology-write`) doesn't cover. It's one connector, next to those two.
 
-**Scope rule: gaps only.** A tool goes here only if the third-party MCP has nothing equivalent. If a later upstream release adds one, the tool here is retired in the same PR that adopts that release ([third-party-upgrades.md](../../docs/vetting/third-party-upgrades.md)). Every new tool is a PR with a vetting addendum, because each one widens what the admin login can do.
+**Scope rule: gaps only.** A tool goes here only if the third-party MCP has nothing equivalent. If a later upstream release adds one, the upgrade PR settles it: one path per action, the safer one ([synology-mcp-upgrades.md](../../docs/vetting/synology-mcp-upgrades.md)). `CHECKED_AGAINST` in `server.py` records the upstream version each tool was last checked against, and a test fails until an upgrade PR rechecks them. Every new tool is a PR with a vetting addendum, because each one widens what the admin login can do.
 
 Tools today (Package Center, for vendor security updates such as Synology-SA-26:14):
 
