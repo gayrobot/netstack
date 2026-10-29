@@ -108,7 +108,7 @@ class Tests(unittest.TestCase):
         self.assertTrue(r["isError"])
 
     def test_every_tool_checked_against_pinned_upstream(self):
-        # Tripwire for CLAUDE.md rule 10: bump CHECKED_AGAINST only after rechecking overlap.
+        # Tripwire for the overlap rule (docs/vetting/synology-mcp-upgrades.md): bump CHECKED_AGAINST only after rechecking overlap.
         lock_in = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                "..", "..", "docs", "vetting", "locks", "mcp-server-synology.in")
         with open(lock_in) as f:

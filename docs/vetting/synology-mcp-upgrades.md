@@ -34,7 +34,7 @@ The agent prepares steps 1 to 6. The owner reviews, merges and switches (steps 7
 
 ## Overlap with synology-extras
 
-`synology-extras` holds only what this MCP can't do (`CLAUDE.md` rule 10). When a release adds something equivalent, there's **one path per action, and it's the safer one.** Compare the two tools on:
+`synology-extras` holds only what this MCP can't do ([build-or-adopt.md](build-or-adopt.md), step 4). When a release adds something equivalent, there's **one path per action, and it's the safer one.** Compare the two tools on:
 
 | Question | Why |
 |---|---|

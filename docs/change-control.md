@@ -14,7 +14,7 @@ Each device has two MCP connections:
 | Gateway write (`unifi-write`, hash-locked environment) | Network Site Admin; create and update on, delete off | the owner approves **every call** (an `ask` rule in the client) |
 | NAS read (`synology`) | non-admin | none; write tools denied |
 | NAS write (`synology-write`) | administrator | the owner approves **every call**; `synology_login` denied |
-| NAS extras (`synology-extras`, first-party, gaps in the Synology MCP only; **proposed, not registered**) | administrator (the NAS write account) | per tool: read-only tools (`package_list`) need no prompt; anything that changes the NAS (`package_upgrade`) needs the owner's approval on **every call**. Rule 5 exception: these reads need admin |
+| NAS extras (`synology-extras`, first-party, gaps in the Synology MCP only; **proposed, not registered**) | administrator (the NAS write account) | per tool: read-only tools (`package_list`) need no prompt; anything that changes the NAS (`package_upgrade`) needs the owner's approval on **every call**. Exception EX-1 in [exceptions.md](exceptions.md): these reads need admin |
 
 What each tier needs:
 

@@ -1,5 +1,5 @@
 # Offline tests for first-party tools. Includes the synology-extras CHECKED_AGAINST tripwire
-# (CLAUDE.md rule 10): an upgrade of the Synology MCP fails here until overlap is rechecked.
+# (docs/vetting/synology-mcp-upgrades.md): an upgrade of the Synology MCP fails here until overlap is rechecked.
 # No secrets, no network access to any device.
 name: tests
 

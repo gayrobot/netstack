@@ -14,9 +14,21 @@ Template:
 - Approved by / when:
 ```
 
+## 2026-10-29: Exceptions cascade and build-or-adopt rubric
+- Status: **proposed** (tier 3: these are the project's own controls). Drafted after the owner's review comments on PR 5: rules shouldn't be so rigid that exceptions pile up, exception detail shouldn't cost context in `CLAUDE.md`, and the rubrics need periodic review
+- Target: [exceptions.md](exceptions.md), [vetting/build-or-adopt.md](vetting/build-or-adopt.md), `CLAUDE.md`
+- Why: the first exception (`synology-extras` reads on an admin login) was written straight into rule 5, and the reasoning for building `synology-extras` wasn't recorded anywhere a later session could find. The third-party vs homegrown rubric the owner remembered wasn't written down
+- Diff:
+  1. `exceptions.md`: a cascade (is it really an exception, do it within the rule, narrow it, change the rule, a registered exception with compensating controls and a review-by date, or don't). The register starts with EX-1, `synology-extras` read-only tools without a prompt
+  2. `build-or-adopt.md`: a cascade (use what's connected, widen a permission, adopt third-party, build first-party gaps only, or keep it manual), with Package Center as the worked example. Its step 3 (search for an existing third-party DSM package MCP) was not done and is flagged
+  3. `CLAUDE.md`: the `synology-extras` sentence in rule 5, the old rule 10 and the layout detail are removed. The new rule 10 is one line pointing to both rubrics
+  4. Both rubrics and every exception have review-by dates (first: 2027-01-29). A reminder in the `SessionStart` hook is proposed, not built
+- Rollback: revert the docs and `CLAUDE.md`
+- Approved by / when: direction, owner, in PR 5 review and in chat, 2026-10-29 ("Draft one fresh"); content pending review
+
 ## 2026-10-28: Upgrade process for the Synology MCP, and overlap with synology-extras
 - Status: **proposed** (tier 3: it changes how the agent's controls are maintained). The overlap rule itself was decided by the owner in chat
-- Target: process; [vetting/synology-mcp-upgrades.md](vetting/synology-mcp-upgrades.md), `CLAUDE.md` rule 10, `tools/synology-extras/test_server.py`
+- Target: process; [vetting/synology-mcp-upgrades.md](vetting/synology-mcp-upgrades.md), `tools/synology-extras/test_server.py`
 - Why: nothing defined what happens when `mcp-server-synology` releases a new version, or what happens when it gains a tool `synology-extras` already has. A future session won't remember this conversation, so it's written down and enforced by a test
 - Diff:
   1. Upgrade path: provenance, tag diff, new tools blocked until reviewed, overlap check, new lock, addendum, owner switch, smoke test, rollback; plus an emergency path
@@ -33,7 +45,7 @@ Template:
 - Diff:
   1. New `tools/synology-extras/` server, starting with two tools, `package_list` and `package_upgrade` (upgrade only, Synology's servers only, dry run by default). Review: [vetting/synology-extras.md](vetting/synology-extras.md)
   2. Owner registers it from `tools/synology-extras/mcp.example.json`, using the NAS write account's 1Password item. No new account
-  3. **Gating per tool, one connector** (owner, 2026-10-28). DSM needs an administrator even to list packages, so `package_list` runs on the admin login with an `allow` rule (no prompt), and `package_upgrade` has an `ask` rule. This is a rule 5 exception for read-only tools in `synology-extras` only: the password never reaches the agent, and the only way to widen the tool set is a reviewed PR
+  3. **Gating per tool, one connector** (owner, 2026-10-28). DSM needs an administrator even to list packages, so `package_list` runs on the admin login with an `allow` rule (no prompt), and `package_upgrade` has an `ask` rule. Recorded as exception EX-1 in [exceptions.md](exceptions.md): the password never reaches the agent, and the only way to widen the tool set is a reviewed PR
   4. **Scope:** `synology-extras` holds only what the third-party Synology MCP can't do. Overlaps are retired when upstream catches up (see [vetting/synology-mcp-upgrades.md](vetting/synology-mcp-upgrades.md))
   5. Tier for `package_upgrade`, owner's choice: proposed **tier 1** (one package, from Synology, approved per call), logged here after each use with role names only; installed package names and versions go in `private/`
 - Rollback: remove the MCP entry and its permission rules. A package upgrade itself can't be rolled back from DSM
