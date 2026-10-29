@@ -25,11 +25,11 @@
 
 - External → Internal blocks everything new, IPv4 and IPv6, apart from the port forwards below. There are no custom IPv6 allow rules, so hosts with global IPv6 addresses aren't reachable from outside.
 - External → Gateway allows only WireGuard and IPv6 neighbor discovery/RA/DHCPv6.
-- **Two WAN port forwards (TCP+UDP, any source) to the NAS**, created around Oct 2024. Their original purpose has since moved behind a VPN tunnel, so they look stale.
+- **Two WAN port forwards (TCP+UDP, any source) to the NAS**, created around Oct 2024, still in use by a client on the NAS.
 
 ## Findings
 
-1. **Stale internet-facing port forwards to the NAS.** Highest risk found so far. Disabling them is proposed in [changes.md](changes.md).
+1. **Internet-facing port forwards to the NAS, open to any source.** They looked stale but are in use by a client on the NAS; disabling them was tried and rolled back on 2026-10-28 (see [changes.md](changes.md)). Narrowing the exposure is still open.
 2. **Internal → Containers is allow-all.** Every device on the flat main LAN, IoT and phones included, can reach every container's admin UI.
 3. A monitoring allow rule points at a container IP that's currently unassigned (container stopped).
 4. The container VLAN's DHCP hands out DNS servers that the Containers zone can't reach. The static-IP containers don't care, but a DHCP client there would get no DNS.
