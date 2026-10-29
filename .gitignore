@@ -23,3 +23,7 @@ raw/
 
 # Private specifics (hostnames, service names, real inventory). Never committed.
 private/
+
+# Python
+__pycache__/
+*.pyc
