@@ -1,0 +1,17 @@
+#!/bin/sh
+# Reads one secret from 1Password with a read-only service-account token kept in the
+# macOS Keychain, so read connections start without a 1Password prompt.
+#   op-ro-read <keychain-service> <op://vault/item/field>
+# The token is never printed. Write connections must not use this; they keep plain `op read`.
+set -eu
+[ $# -eq 2 ] || { echo "usage: op-ro-read <keychain-service> <op://vault/item/field>" >&2; exit 2; }
+service=$1
+ref=$2
+case "$ref" in op://*) ;; *) echo "op-ro-read: not an op:// reference" >&2; exit 2 ;; esac
+if ! OP_SERVICE_ACCOUNT_TOKEN=$(/usr/bin/security find-generic-password -a "$(id -un)" -s "$service" -w 2>/dev/null) \
+  || [ -z "$OP_SERVICE_ACCOUNT_TOKEN" ]; then
+  echo "op-ro-read: no token in Keychain item '$service'; run the rotation" >&2
+  exit 1
+fi
+export OP_SERVICE_ACCOUNT_TOKEN
+exec /opt/homebrew/bin/op read --no-newline "$ref"
