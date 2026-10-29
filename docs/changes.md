@@ -14,6 +14,51 @@ Template:
 - Approved by / when:
 ```
 
+## 2026-10-29: Exceptions cascade and build-or-adopt rubric
+- Status: **proposed** (tier 3: these are the project's own controls). Drafted after the owner's review comments on PR 5: rules shouldn't be so rigid that exceptions pile up, exception detail shouldn't cost context in `CLAUDE.md`, and the rubrics need periodic review
+- Target: [exceptions.md](exceptions.md), [vetting/build-or-adopt.md](vetting/build-or-adopt.md), `CLAUDE.md`
+- Why: the first exception (`synology-extras` reads on an admin login) was written straight into rule 5, and the reasoning for building `synology-extras` wasn't recorded anywhere a later session could find. The third-party vs homegrown rubric the owner remembered wasn't written down
+- Diff:
+  1. `exceptions.md`: a cascade (is it really an exception, do it within the rule, narrow it, change the rule, a registered exception with compensating controls and a review-by date, or don't). The register starts with EX-1, `synology-extras` read-only tools without a prompt
+  2. `build-or-adopt.md`: a cascade (use what's connected, widen a permission, adopt third-party, build first-party gaps only, or keep it manual), with Package Center as the worked example. Its step 3 (search for an existing third-party DSM package MCP) was not done and is flagged
+  3. `CLAUDE.md`: the `synology-extras` sentence in rule 5, the old rule 10 and the layout detail are removed. The new rule 10 is one line pointing to both rubrics
+  4. Both rubrics and every exception have review-by dates (first: 2027-01-29). A reminder in the `SessionStart` hook is proposed, not built
+- Rollback: revert the docs and `CLAUDE.md`
+- Approved by / when: direction, owner, in PR 5 review and in chat, 2026-10-29 ("Draft one fresh"); content pending review
+
+## 2026-10-28: Upgrade process for the Synology MCP, and overlap with synology-extras
+- Status: **proposed** (tier 3: it changes how the agent's controls are maintained). The overlap rule itself was decided by the owner in chat
+- Target: process; [vetting/synology-mcp-upgrades.md](vetting/synology-mcp-upgrades.md), `tools/synology-extras/test_server.py`
+- Why: nothing defined what happens when `mcp-server-synology` releases a new version, or what happens when it gains a tool `synology-extras` already has. A future session won't remember this conversation, so it's written down and enforced by a test
+- Diff:
+  1. Upgrade path: provenance, tag diff, new tools blocked until reviewed, overlap check, new lock, addendum, owner switch, smoke test, rollback; plus an emergency path
+  2. Overlap rule: one path per action, keep the safer one. Retire ours if theirs is as narrow and safe, deny theirs if it's broader, decide per tool if mixed
+  3. Tripwire: each `synology-extras` tool records the upstream version it was checked against; a test fails if that doesn't match the pin in `locks/mcp-server-synology.in`
+  4. Gap noted, not changed: both Synology connectors still start under `uvx` with floating dependencies
+- Rollback: revert the doc, the rule and the test
+- Approved by / when: overlap rule, owner, in chat, 2026-10-28 ("Make the PR"); the process as a whole pending review of this PR
+
+## 2026-10-28: First-party synology-extras MCP (package list and upgrade)
+- Status: **proposed** (tier 3: it adds an agent control, so the owner registers it). Code, offline tests and vetting are in this PR; no live DSM call has been made yet
+- Target: agent client MCP config and permission rules; the NAS (Package Center, through the existing NAS write account)
+- Why: vendor security advisories (Synology-SA-26:14 was the trigger) are fixed by package updates. The vetted Synology MCP has no package tools, and SSH would give the agent a full shell on the NAS
+- Diff:
+  1. New `tools/synology-extras/` server, starting with two tools, `package_list` and `package_upgrade` (upgrade only, Synology's servers only, dry run by default). Review: [vetting/synology-extras.md](vetting/synology-extras.md)
+  2. Owner registers it from `tools/synology-extras/mcp.example.json`, using the NAS write account's 1Password item. No new account
+  3. **Gating per tool, one connector** (owner, 2026-10-28). DSM needs an administrator even to list packages, so `package_list` runs on the admin login with an `allow` rule (no prompt), and `package_upgrade` has an `ask` rule. Recorded as exception EX-1 in [exceptions.md](exceptions.md): the password never reaches the agent, and the only way to widen the tool set is a reviewed PR
+  4. **Scope:** `synology-extras` holds only what the third-party Synology MCP can't do. Overlaps are retired when upstream catches up (see [vetting/synology-mcp-upgrades.md](vetting/synology-mcp-upgrades.md))
+  5. Tier for `package_upgrade`, owner's choice: proposed **tier 1** (one package, from Synology, approved per call), logged here after each use with role names only; installed package names and versions go in `private/`
+- Rollback: remove the MCP entry and its permission rules. A package upgrade itself can't be rolled back from DSM
+- Verify: `package_list` returns the installed packages; a dry run reports the right from/to versions; one upgrade of a low-risk package, checked in Package Center
+- Approved by / when: design and gating, owner, in chat, 2026-10-28 ("I would like to do synology-extras", ungated list). Registration still pending (tier 3, owner)
+
+## 2026-10-28: Apply vendor security updates for Synology-SA-26:14
+- Status: **closed 2026-10-28** after the owner checked Package Center. Details in `private/changes.md`
+- Target: the NAS
+- Why: [Synology-SA-26:14](https://www.synology.com/en-au/security/advisory/Synology_SA_26_14), critical remote code execution in some DSM packages
+- Diff: see `private/changes.md`
+- Approved by / when: n/a
+
 ## 2026-10-28: Governance proof: denied write and read-connection refusal
 - Status: **tested 2026-10-28; no change made.** End state matches the start state (UTC times below fall on 2026-10-29)
 - Target: the same in-wall access point as the proof of concept below; controller device name only

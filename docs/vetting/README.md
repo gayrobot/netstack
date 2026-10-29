@@ -6,7 +6,7 @@ Anything an agent loads can act with the agent's access. Nothing gets installed 
 
 1. **Vet before install.** Install only after the review is written and its verdict is OK.
 2. **Pin what runs.** Use an exact version and, for packages, a hash-locked requirements file (`locks/`), installed with `--require-hashes --no-build`.
-3. **Re-vet on change.** A version bump, a new dependency resolution or a new permission means a new review, or a dated addendum to the existing one.
+3. **Re-vet on change.** A version bump, a new dependency resolution or a new permission means a new review, or a dated addendum to the existing one. How the Synology MCP is upgraded: [synology-mcp-upgrades.md](synology-mcp-upgrades.md). Whether to adopt or build: [build-or-adopt.md](build-or-adopt.md).
 4. **Least privilege first.** Every review ends with the narrowest account and settings the tool can run with.
 
 ## Checklist
@@ -46,4 +46,5 @@ Copy this into `docs/vetting/<name>.md` and fill in every line. Write "not check
 |---|---|---|---|
 | UniFi Network MCP (sirkirby/unifi-mcp) | plugin 1.1.5, PyPI 0.38.3 | OK with conditions | [unifi-mcp.md](unifi-mcp.md) |
 | Synology MCP (atom2ueki/mcp-server-synology) | 1.8.0 | **Not OK as configured** (admin account, 43 ungated write tools) | [synology-mcp.md](synology-mcp.md) |
+| synology-extras (first-party, `tools/synology-extras/`) | 0.1.0 | OK with conditions (not registered yet) | [synology-extras.md](synology-extras.md) |
 | HomeClaw plugin | 1.0.13 | **Not vetted** (already installed) | pending |

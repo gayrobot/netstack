@@ -21,7 +21,8 @@ A home network (UniFi Dream Machine Pro, a Mac Pro VM host and the VMs on it) ru
 6. **Public vs. private.** Real hostnames, account names, service and container names, and the exact inventory go in `private/` (gitignored). Tracked files use role names only. See `docs/redaction.md`. No MACs, public IPs or IPv6 prefixes, passphrases, keys or serials anywhere tracked.
 7. **Never bypass the hooks** (`--no-verify`). If `scripts/check-public.sh` blocks a commit, fix the content.
 8. **Separate verified from inferred.** Every doc ends with a "Couldn't verify" list.
-9. **Every repo change goes through a pull request.** Work on a branch, run `scripts/check-public.sh tree`, push the branch and open a PR. Never commit or push to `main` directly. The owner reviews and merges; the `check-public` CI job must pass first.
+9. **Every repo change goes through a pull request.** Work on a branch, run `scripts/check-public.sh tree`, push the branch and open a PR. Never commit or push to `main` directly. The owner reviews and merges; the `check-public` and `tests` CI jobs must pass first.
+10. **Exceptions and new capabilities follow the rubrics.** An exception to these rules goes through `docs/exceptions.md` (check its register before relying on one). A new agent capability goes through `docs/vetting/build-or-adopt.md`.
 
 ## Layout
 
@@ -30,6 +31,7 @@ A home network (UniFi Dream Machine Pro, a Mac Pro VM host and the VMs on it) ru
 - `docs/changes.md`: change log (proposed, approved, applied, rejected)
 - `docs/change-control.md` + `scripts/change-window.sh`: write tiers and the restore-point gate; `docs/change-windows.log` is its audit log
 - `docs/vetting/`: supply-chain reviews of every MCP server and skill before it's used
+- `tools/`: first-party code
 - `docs/redaction.md`: how the public/private split is enforced
 - `private/`: real specifics, raw dumps, the denylist (never committed)
 - `.github/workflows/check-public.yml`: the same scan in CI, with the denylist from the `DENYLIST` secret
