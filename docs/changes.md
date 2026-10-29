@@ -36,6 +36,38 @@ Template:
 - Diff: see `private/changes.md`
 - Approved by / when: n/a
 
+## 2026-10-28: Governance proof: denied write and read-connection refusal
+- Status: **tested 2026-10-28; no change made.** End state matches the start state (UTC times below fall on 2026-10-29)
+- Target: the same in-wall access point as the proof of concept below; controller device name only
+- Why: the proof of concept showed the approved path working. This tests that the controls actually stop a write: a write the owner denies, and a write attempted through the read connection
+- Diff:
+  1. Before (read connection, 01:59 UTC): name `<model default>`, online
+  2. Deny test (write connection, `unifi_execute` → `unifi_rename_device`, new name `deny-test`, `confirm: true`). **Approval prompt appeared** showing the tool, device and new name (owner's screenshot, 01:59:43 UTC). Owner clicked **Deny**; the client rejected the call and nothing was sent
+  3. Verify (read connection, 02:00 UTC): name still `<model default>`, online
+  4. Negative test (read connection, same tool, new name `read-test`): refused by the read connection's own policy before any controller call ("Update is disabled by policy for devices"). No prompt, since the read connection has none
+  5. Verify (read connection, 02:00 UTC): name still `<model default>`, online
+- Findings:
+  - Both controls held. Deny ends the agent's turn, so the owner has to tell it to carry on afterwards
+  - The read-connection refusal came from the MCP's policy layer only. Whether the controller would also refuse the view-only account (a 403) wasn't tested, because that needs the read connection's policy turned on (tier 3)
+  - Independent audit: the controller's **Admin Activity** log (owner's screenshot from the UI) shows exactly two entries, both attributed to the write account: the two proof-of-concept renames at 01:25:57 and 01:27:37 UTC. There is **no entry** for the denied call or the read-connection attempt. The agent can't reach this log: the network event log has no rename events, and `/system-log` with admin categories returns HTTP 400. So the audit trail is checked by the owner, outside the agent
+  - The write connection runs with the MCP's own permission mode set to bypass, so the client `ask` rule is the only per-call gate on it
+- Rollback: none needed
+- Approved by / when: owner, 2026-10-28. Read-connection test approved in chat ("the new tests"); Deny clicked by the owner on the prompt
+
+## 2026-10-28: Proof of concept: tier-1 rename through the write connection
+- Status: **applied and reverted 2026-10-28** (temporary test; the owner hasn't chosen real AP names yet). End state matches the start state
+- Target: one in-wall access point (one of three sharing the model's default name); controller device name only
+- Why: first end-to-end test of the per-call-approved gateway write connection, and of whether the client's `ask` rule is enforced for it
+- Diff:
+  1. Before (read connection, 01:24 UTC): name `<model default>`, online, uplink on the core switch
+  2. Write 1 (write connection, `unifi_execute` → `unifi_rename_device`, `confirm: true`): `<model default> -> test-rename`. **Approval prompt appeared** (owner confirmed, screenshot taken before approving). Returned success
+  3. Verify (read connection): name `test-rename`, briefly `provisioning`, then `online`, same IP and uplink
+  4. Write 2 (same tool): `test-rename -> <model default>`. **Approval prompt appeared** (owner confirmed, screenshot taken). Returned success
+  5. Verify (read connection, 01:28 UTC): name back to `<model default>`, `online`, same IP
+- Findings: the `ask` rule held in auto mode. Each prompt showed the tool, the device and the new name before anything ran. The read connection lagged the write by up to about a minute (it reported the old name until the AP's next check-in), so verify after a short wait rather than right away. Tool discovery used the read connection's `unifi_tool_index`, so only the two writes went through the write connection
+- Rollback: write 2 was the rollback
+- Approved by / when: owner, by clicking Allow once on each prompt, 2026-10-28; task set by the governance session the same day
+
 ## 2026-10-28: Backup job creates a fresh gateway backup each night
 - Status: **applied 2026-10-28.** Deployed on the NAS; first on-demand run stored a backup created the same minute, `archive_check: ok` (verified by the agent through the read-only NAS account). Test: on-demand create returned `rc: ok` in about 1 s; the download was a valid archive; the file does not join the auto-backup list and its name is fixed per controller version, so it is overwritten each run and nothing builds up. The updated job ran twice locally against the gateway (exit 0), and a **test decrypt** with the offline key reproduced the original file's hash exactly
 - Target: the NAS backup job; the gateway's network backups (via the backup account, Network Full Management)
