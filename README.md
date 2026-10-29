@@ -102,6 +102,7 @@ scripts/
   check-public.sh         denylist scan (staged, message, full history)
   nas/pull-gateway-backup.sh
 .githooks/                pre-commit + commit-msg → check-public.sh
+.github/workflows/        check-public in CI (denylist from a secret, output suppressed)
 private/                  gitignored: real names, raw dumps, denylist, configs
 ```
 
@@ -113,7 +114,7 @@ private/                  gitignored: real names, raw dumps, denylist, configs
 
 ## Known limits
 
-- Git hooks run locally and can be skipped with `--no-verify`. A server-side check is on the roadmap.
+- Git hooks run locally and can be skipped with `--no-verify`. The `check-public` CI job repeats the scan on every PR and push to `main`, but it runs after the branch is pushed, so it keeps a leak out of `main`, not off GitHub.
 - The MCP's permission flags are enforced by the MCP's own code; only a separate gateway account makes the gateway enforce them.
 - The backup gate proves a backup exists and matches its hash, not that it restores. Test a restore periodically.
 - A denylist only catches the terms it lists.

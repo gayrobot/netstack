@@ -21,6 +21,7 @@ A home network (UniFi Dream Machine Pro, a Mac Pro VM host and the VMs on it) ru
 6. **Public vs. private.** Real hostnames, account names, service and container names, and the exact inventory go in `private/` (gitignored). Tracked files use role names only. See `docs/redaction.md`. No MACs, public IPs or IPv6 prefixes, passphrases, keys or serials anywhere tracked.
 7. **Never bypass the hooks** (`--no-verify`). If `scripts/check-public.sh` blocks a commit, fix the content.
 8. **Separate verified from inferred.** Every doc ends with a "Couldn't verify" list.
+9. **Every repo change goes through a pull request.** Work on a branch, run `scripts/check-public.sh tree`, push the branch and open a PR. Never commit or push to `main` directly. The owner reviews and merges; the `check-public` CI job must pass first.
 
 ## Layout
 
@@ -31,6 +32,7 @@ A home network (UniFi Dream Machine Pro, a Mac Pro VM host and the VMs on it) ru
 - `docs/vetting/`: supply-chain reviews of every MCP server and skill before it's used
 - `docs/redaction.md`: how the public/private split is enforced
 - `private/`: real specifics, raw dumps, the denylist (never committed)
+- `.github/workflows/check-public.yml`: the same scan in CI, with the denylist from the `DENYLIST` secret
 - `.env.example`: variable names only, never values
 
 ## Environment notes
