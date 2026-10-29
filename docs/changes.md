@@ -14,6 +14,20 @@ Template:
 - Approved by / when:
 ```
 
+## 2026-10-29: Put synology-extras behind write-gate, at repo scope
+- Status: **proposed** (tier 3: a new connection and its credential; the owner registers it)
+- Target: agent client MCP config and user settings (one new connection, two permission rules)
+- Why: the registration in the 2026-10-28 synology-extras entry used user scope and started the server directly. Since then the NAS connections moved to local scope for this repo, and the write connections run behind [write-gate](../tools/write-gate/README.md). synology-extras holds the NAS admin login, so it follows the write connections (owner's choice in chat, 2026-10-29: "Behind write-gate")
+- Diff:
+  1. Register `synology-extras` at local scope in this repo and its worktrees, with its command wrapped as `write-gate run --name synology-extras -- /usr/bin/python3 -I <repo>/tools/synology-extras/server.py` ([mcp.example.json](../tools/synology-extras/mcp.example.json))
+  2. Permission rules unchanged: `allow` on `mcp__synology-extras__package_list`, `ask` on `mcp__synology-extras__package_upgrade`, none for the whole server
+  3. Use: when a package check or upgrade is next, the agent says so and runs `write-gate on synology-extras`. Starting the server reads no password; each tool call runs `op read`, so the 1Password prompt comes with the call
+  4. Docs: [change-control.md](change-control.md) (also puts the synology-extras row back inside the connection table, which a merge had pushed below it), the synology-extras README and vetting conditions, and EX-1's scope in [exceptions.md](exceptions.md)
+- Rollback: `claude mcp remove synology-extras -s local` in each checkout, and remove the two permission rules
+- Verify: a new session here shows `synology-extras` connected with no tools and no prompt. `write-gate on synology-extras`, then `package_list` brings a 1Password prompt and no click; `package_upgrade` with its default dry run needs a click
+- Approved by / when: placement behind write-gate, owner, in chat, 2026-10-29. Registration pending (owner)
+- Couldn't verify: how often 1Password asks again when the password is read on each call; that the server works behind the gate (the gate is tested live only with `unifi-write`)
+
 ## 2026-10-29: No 1Password prompts for read connections; write connections only when needed
 - Status: **proposed** (tier 3: agent credentials and the write connections themselves; the owner applies). Steps 0 and 3 were applied by the agent on 2026-10-29 at the owner's request (logged here per rule 4)
 - Target: agent client MCP config and user settings (UniFi plugin options, the NAS launcher); 1Password (a new vault and a service account); macOS Keychain (one item)

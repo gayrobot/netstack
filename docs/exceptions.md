@@ -24,7 +24,7 @@ Granting, renewing or ending an exception is a change to "these controls", so it
 
 | ID | Rule | Scope | Why | Compensating controls | Approved | Review by |
 |---|---|---|---|---|---|---|
-| EX-1 | 5: reads only on read connections, without prompts only there | `synology-extras` read-only tools (today: `package_list`) run on the NAS admin login with an `allow` rule | DSM has no non-admin role that can list packages (error 105); prompting a read-only list was judged not worth the friction | the agent never sees the password; the tool list is fixed in code and changes only through a reviewed PR; anything that changes the NAS stays `ask`; `CHECKED_AGAINST` test on upgrades of the Synology MCP | owner, in chat, 2026-10-28 | 2027-01-29 |
+| EX-1 | 5: reads only on read connections, without prompts only there | `synology-extras` read-only tools (today: `package_list`) run on the NAS admin login with an `allow` rule, only while `write-gate` has `synology-extras` on | DSM has no non-admin role that can list packages (error 105); prompting a read-only list was judged not worth the friction | the agent never sees the password; the tool list is fixed in code and changes only through a reviewed PR; anything that changes the NAS stays `ask`; off by default behind write-gate, so the tools exist only after the agent turns them on for one session; `CHECKED_AGAINST` test on upgrades of the Synology MCP | owner, in chat, 2026-10-28 | 2027-01-29 |
 
 At review, each row is renewed (with a new date), ended, or replaced by a rule change.
 

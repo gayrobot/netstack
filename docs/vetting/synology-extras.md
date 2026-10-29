@@ -35,12 +35,12 @@
 
 ## Risks that stay
 
-- An administrator credential sits behind a tool surface we wrote, and `package_list` uses it with no prompt. A bug, or a later edit that adds a tool, widens it. Mitigation: `ask` on every tool that changes anything, any change to `server.py` means a new review (rule 3 in the README), and the agent never sees the password.
+- An administrator credential sits behind a tool surface we wrote, and `package_list` uses it with no approval click (only while write-gate has it on). A bug, or a later edit that adds a tool, widens it. Mitigation: `ask` on every tool that changes anything, any change to `server.py` means a new review (rule 3 in the README), and the agent never sees the password.
 - A package upgrade can't be rolled back from DSM. Synology's package server and code signing (`check_codesign=true`) are the supply-chain trust here, the same as clicking Update in Package Center.
 
 ## Conditions
 
-1. Register it with `allow` on `package_list` and `ask` on `package_upgrade` (owner's choice, 2026-10-28). Every tool added later is `ask` unless it's read-only and the owner approves it as `allow`.
+1. Register it with `allow` on `package_list` and `ask` on `package_upgrade` (owner's choice, 2026-10-28). Every tool added later is `ask` unless it's read-only and the owner approves it as `allow`. Register it at local scope for this repo, behind `write-gate run --name synology-extras` (owner's choice, 2026-10-29), so no session has its tools until the agent turns it on.
 2. Use the existing NAS write account. Don't create a new admin.
 3. Run from a checkout of merged `main`.
 4. First live use runs in this order, with the owner watching: `package_list`, a dry run, then one real upgrade of a low-risk package. Record the result here as an addendum.
