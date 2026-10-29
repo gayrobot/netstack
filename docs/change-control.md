@@ -10,7 +10,7 @@ Each device has two MCP connections:
 
 | Connection | Account | Prompts |
 |---|---|---|
-| Gateway read (the UniFi plugin) | View Only | none. Its password comes through a read-only 1Password service account ([op-ro-read](../tools/op-ro-read/README.md)), so starting it doesn't prompt either |
+| Gateway read (the UniFi plugin) | View Only | none. Its password comes through a read-only 1Password service account ([op-ro-read](../tools/op-ro-read/README.md)), so starting it doesn't prompt either. The token renews itself every 90 days with one 1Password approval ([op-rotate](../tools/op-rotate/README.md)) |
 | Gateway write (`unifi-write`, hash-locked environment) | Network Site Admin; create and update on, delete off | **off until the owner turns writes on** ([write-gate](../tools/write-gate/README.md)); then one 1Password prompt when it starts, and the owner approves **every call** (an `ask` rule in the client) |
 | NAS read (`synology`) | non-admin | none, at start or per call (same service account); write tools denied |
 | NAS write (`synology-write`) | administrator | **off until the owner turns writes on**; then one 1Password prompt when it starts, and the owner approves **every call**; `synology_login` denied |
