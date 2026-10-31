@@ -8,7 +8,7 @@ Columns: **Threat** is from the strategy's threat table. **Tier** is from [chang
 
 | ID | Item | Threat | Tier | Effort | Status |
 |---|---|---|---|---|---|
-| A1 | **Close or narrow the two internet-facing port forwards to the NAS.** Check first: which NAS client uses them, and whether it can run behind the VPN gateway container instead. Then disable both, or restrict the source | T2 | 2 | M | open; tried and rolled back 2026-10-28 because the check was skipped. The check is the first step this time |
+| A1 | **Move the NAS's peer-to-peer download client behind the VPN gateway container, then close the two internet-facing port forwards.** Check done 2026-10-31: the forwards are that client's inbound peer port. Checks still open: the VPN provider offers port forwarding; the forwards map to the peer port only. Then: a client container in the app VM sharing the VPN gateway's network namespace, the download share mounted over NFS, the provider's forwarded port set in both, the kill switch verified, tasks moved over, the NAS client's peer-to-peer module off, both forwards disabled, verified from outside | T2 | 2 / owner | L | open; risk R1 accepted 2026-10-31 until this lands. Tried and rolled back 2026-10-28 because the check was skipped |
 | A2 | Fix DNS on the container VLAN: DHCP hands out resolvers the Containers zone can't reach | T1 | 2 | S | open |
 | A3 | Turn threat management (IPS) on for every network, not just the main LAN; watch gateway memory afterwards | T1 | 2 | S | open |
 | A4 | Set mDNS reflection to the services that need it instead of all, so the new VLANs in phase B don't see every service | T1 | 2 | S | open; do before B2 |
