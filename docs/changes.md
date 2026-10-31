@@ -14,6 +14,18 @@ Template:
 - Approved by / when:
 ```
 
+## 2026-10-31: Narrow one denylist term so the history scan passes
+- Status: **applied by the owner 2026-10-31** (tier 3: this is one of the project's own controls), in `private/denylist.txt` and the `DENYLIST` secret
+- Target: one line of the denylist. The pattern itself stays private
+- Why: the `check-public` CI scan covers all history, and PR 13's merge commit has a private term in its branch name. Main has failed the scan since that merge, and every PR would fail with it. Nothing on a branch can remove a commit already on main
+- Diff: the term no longer matches when a hyphen follows it. Other forms of it still match
+- Alternatives considered: rewriting main's history (rejected: rule 9, and the branch name is already public); exempting the commit in the script or workflow (rejected: that bypasses the check, rule 7)
+- Check first: done. Tested against the commit metadata: no hits, and the usual forms of the term still caught. No other denylist line matches commit metadata or paths. `scripts/check-public.sh tree` passes locally with the new pattern
+- Risk accepted: a future use of the term followed by a hyphen, such as in a branch name, isn't caught
+- Rollback: restore the line in both places
+- Approved by / when: owner, by running the change, 2026-10-31
+- Couldn't verify: that the secret matched the local file before it was overwritten; the secret can't be read back
+
 ## 2026-10-31: Container VLAN DHCP DNS to its own gateway (A2)
 - Status: **applied and verified 2026-10-31**, inside one tier 2 window (22:25:06 to 22:25:55 UTC, logged in `change-windows.log`). Object names and addresses are in `private/changes.md`
 - Target: gateway, the container VLAN's network object, two DHCP DNS fields. No firewall change
