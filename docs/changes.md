@@ -14,6 +14,16 @@ Template:
 - Approved by / when:
 ```
 
+## 2026-10-31: Accept the NAS port forwards as a known risk (R1)
+- Status: proposed; accepted when the owner merges the PR
+- Target: docs only. `strategy.md` (T2 re-rated, new "Accepted risks" register), `network.md` (inbound section, finding 1), `backlog.md` (A1 reshaped). No device changes
+- Why: the owner identified what the two forwards serve: the inbound peer port of the NAS's built-in peer-to-peer download client. That narrows T2 from "DSM on the internet" to "one closed-source listener on the internet", so the docs were overstating the likelihood and understating why it still matters (the listener runs on the NAS, on the flat LAN). The owner wants inbound peers to keep working, so the forwards stay for now and the exposure is written down as a risk with an exit
+- Check first: done. The read account can't see the client's settings (DSM error 105) and Container Manager isn't installed on the NAS, so the client is the built-in one, as the owner said. Which port it listens on and whether the forwards hit only that port are still the owner's to confirm in DSM (network.md, "Couldn't verify")
+- Alternatives considered: disable both forwards (zero inbound exposure, peers can't connect in; the owner declined); a proxy in front of the ports (moves the address, not the code; rejected); restrict the forwards' source (meaningless for peer traffic, which comes from anywhere; rejected); the move to the app VM behind the VPN gateway container with provider port forwarding (the exit for R1, now the shape of A1)
+- Diff: see the PR
+- Rollback: revert the PR; nothing on any device changed
+- Approved by / when: owner, in chat, 2026-10-31 ("mark what I am accepting to be a risk"); the merge is the acceptance
+
 ## 2026-10-29: Put synology-extras behind write-gate, at repo scope
 - Status: **proposed** (tier 3: a new connection and its credential; the owner registers it)
 - Target: agent client MCP config and user settings (one new connection, two permission rules)

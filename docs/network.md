@@ -25,11 +25,11 @@
 
 - External → Internal blocks everything new, IPv4 and IPv6, apart from the port forwards below. There are no custom IPv6 allow rules, so hosts with global IPv6 addresses aren't reachable from outside.
 - External → Gateway allows only WireGuard and IPv6 neighbor discovery/RA/DHCPv6.
-- **Two WAN port forwards (TCP+UDP, any source) to the NAS**, created around Oct 2024, still in use by a client on the NAS.
+- **Two WAN port forwards (TCP+UDP, any source) to the NAS**, created around Oct 2024. The owner identified the client on 2026-10-31: they are the inbound peer port of a peer-to-peer download client built into the NAS OS. They reach that one listener, not DSM or the shares. Carried as accepted risk R1 in [strategy.md](strategy.md) until the client moves behind the VPN gateway container (backlog A1).
 
 ## Findings
 
-1. **Internet-facing port forwards to the NAS, open to any source.** They looked stale but are in use by a client on the NAS; disabling them was tried and rolled back on 2026-10-28 (see [changes.md](changes.md)). Narrowing the exposure is still open.
+1. **Internet-facing port forwards to the NAS, open to any source.** They looked stale but are in use by a client on the NAS; disabling them was tried and rolled back on 2026-10-28 (see [changes.md](changes.md)). On 2026-10-31 the owner identified the client as the NAS's built-in peer-to-peer download client, so the forwards expose its inbound peer listener only. The owner accepted that as risk R1 ([strategy.md](strategy.md)); the exit is moving the client off the NAS (backlog A1).
 2. **Internal → Containers is allow-all.** Every device on the flat main LAN, IoT and phones included, can reach every container's admin UI.
 3. A monitoring allow rule points at a container IP that's currently unassigned (container stopped).
 4. The container VLAN's DHCP hands out DNS servers that the Containers zone can't reach. The static-IP containers don't care, but a DHCP client there would get no DNS.
@@ -37,7 +37,7 @@
 
 ## Couldn't verify
 
-- Whether the NAS still listens on the forwarded ports
+- The client's listening-port and peer-discovery settings, and that the forwards map to its peer port only and not its web port. The read account can't see them (DSM error 105); the owner checks in DSM
 - Server VLAN clients beyond the DNS resolvers
 - WLAN-to-network mapping
 - Rule ordering between user and predefined policies (needs API key plus session)

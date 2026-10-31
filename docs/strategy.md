@@ -27,13 +27,21 @@ The imbalance is the problem this document fixes. Governance isn't wrong; it's a
 | # | Threat | Why it's likely | Today's exposure |
 |---|---|---|---|
 | T1 | A phone, TV, speaker or IoT device on the LAN is compromised and moves sideways | Dozens of IoT devices, most never patched, share one network with the servers | **High.** One flat LAN; Internal → Containers is allow-all; every container admin UI is reachable from every device in the house |
-| T2 | An internet-facing service on the NAS is exploited | DSM ships critical remote-code-execution fixes regularly (SA-26:14 was this month); the forwards accept any source | **High.** Two WAN port forwards to the NAS, any source, in use by one NAS client |
+| T2 | An internet-facing service on the NAS is exploited | The two forwards reach one process: the inbound peer listener of a peer-to-peer download client built into the NAS OS (identified by the owner 2026-10-31). It parses unauthenticated connections from any source, is closed source, and is patched only when the vendor ships that package. No public exploit of that listener is known. DSM itself and the shares aren't reachable through the forwards | **Medium likelihood, high impact.** The client runs on the NAS, on the flat LAN, so a flaw in it lands on the most valuable host. Carried as accepted risk R1 below until backlog A1 moves the client off the NAS |
 | T3 | A container image or dependency is malicious or vulnerable | Images are pinned by tag only; containers auto-restart and have open egress | **Medium.** The Containers zone limits what they reach inside; egress and tag-pinning are open |
 | T4 | Ransomware or an accidental delete on the NAS | No undo exists for the data shares today | **High.** Snapshots cover only the gateway-backup share; no data-share snapshots, no off-site copy, no scrub schedule |
 | T5 | The agent makes a wrong or injected change | Reads untrusted data (device names, SSIDs, docs) with write tools present | **Low.** This is the best-covered threat: read/write split, per-call approval, restore-point gate, change log |
 | T6 | A leaked or stolen credential (laptop, cloud account, VPN peer) | Normal | **Medium.** 1Password holds the agent's credentials; UniFi cloud account MFA, VPN peer list and NAS default accounts are unreviewed |
 
 Out of scope: targeted nation-state attack, physical break-in, the ISP.
+
+### Accepted risks
+
+Risks the owner has looked at and chosen to carry for now, with what would end the acceptance. Each row has a review-by date; at review it's renewed, ended by its exit, or re-rated. Accepting a risk is the owner's call (tier 3): the agent writes the row, the owner accepts it by merging.
+
+| ID | What is accepted | Why | What would end it | Accepted | Review by |
+|---|---|---|---|---|---|
+| R1 | The two WAN port forwards to the NAS stay open to any source. They reach only the inbound peer listener of the NAS's built-in peer-to-peer download client, not DSM or the shares. A flaw in that listener would run code on the NAS, on the flat LAN, with write access to the download share. The NAS's public IP is also visible to every peer it exchanges data with | The owner wants peers to be able to connect inbound. Closing the forwards keeps downloads working but makes the NAS unreachable to peers. A proxy in front of the ports would change which address receives the packets, not which code parses them, so it doesn't reduce this risk | Moving the client into the app VM behind the VPN gateway container, with the VPN provider's port forwarding carrying inbound peers through the tunnel (backlog A1). Then both forwards close and the home IP leaves the peer lists | owner, in chat, 2026-10-31; confirmed by merging the PR that added this row | 2027-01-29 |
 
 ## Principles
 
