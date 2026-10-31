@@ -8,7 +8,7 @@
 |---|---|---|---|---|---|
 | Main LAN | untagged | 10.0.0.0/23 | Internal | prefix delegation + SLAAC (global addresses) | Flat: gateway, VM host, app VM's management NIC, NAS, home automation, clients |
 | Container VLAN | 2 | 10.0.2.0/24 | **Containers** (custom) | none | App containers on macvlan, static IPs |
-| Server VLAN | 3 | 10.0.3.0/24 | Internal | none | Internal DNS resolvers |
+| Server VLAN | 3 | 10.0.3.0/24 | Internal | none | Meant for internal DNS resolvers; nothing answered there on 2026-10-31 |
 | Remote-user VPN | – | 192.168.3.0/24 | Vpn | – | WireGuard |
 | WAN 1 / WAN 2 | – | – | External | WAN 2 delegates the v6 prefix | |
 
@@ -32,13 +32,13 @@
 1. **Internet-facing port forwards to the NAS, open to any source.** They looked stale but are in use by a client on the NAS; disabling them was tried and rolled back on 2026-10-28 (see [changes.md](changes.md)). On 2026-10-31 the owner identified the client as the NAS's built-in peer-to-peer download client, so the forwards expose its inbound peer listener only. The owner accepted that as risk R1 ([strategy.md](strategy.md)); the exit is moving the client off the NAS (backlog A1).
 2. **Internal → Containers is allow-all.** Every device on the flat main LAN, IoT and phones included, can reach every container's admin UI.
 3. A monitoring allow rule points at a container IP that's currently unassigned (container stopped).
-4. The container VLAN's DHCP hands out DNS servers that the Containers zone can't reach. The static-IP containers don't care, but a DHCP client there would get no DNS.
+4. The server VLAN's DHCP hands out DNS resolvers on that same VLAN, and nothing answers at them (read 2026-10-31; backlog B4). The container VLAN did the same until 2026-10-31, when it moved to its own gateway as a stopgap (backlog A2, see [changes.md](changes.md)).
 5. An old per-client egress allow rule looks like it predates the VPN setup.
 
 ## Couldn't verify
 
 - The client's listening-port and peer-discovery settings, and that the forwards map to its peer port only and not its web port. The read account can't see them (DSM error 105); the owner checks in DSM
-- Server VLAN clients beyond the DNS resolvers
+- Whether the server VLAN has any clients. The controller shows none online on 2026-10-31
 - WLAN-to-network mapping
 - Rule ordering between user and predefined policies (needs API key plus session)
 - Site-wide mDNS / multicast settings
