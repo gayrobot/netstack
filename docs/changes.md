@@ -14,6 +14,32 @@ Template:
 - Approved by / when:
 ```
 
+## 2026-10-31: Container VLAN DHCP DNS to its own gateway (A2)
+- Status: **applied and verified 2026-10-31**, inside one tier 2 window (22:25:06 to 22:25:55 UTC, logged in `change-windows.log`). Object names and addresses are in `private/changes.md`
+- Target: gateway, the container VLAN's network object, two DHCP DNS fields. No firewall change
+- Why: DHCP on that VLAN hands out two resolvers on the server VLAN. Containers → Internal blocks them, and nothing answers there anyway. A DHCP client on the VLAN would get no DNS. Stopgap until B4
+- Check first, all from live reads on 2026-10-31 unless noted:
+  1. **Pass.** The VLAN hands out the two resolvers `private/network.md` records, with custom DHCP DNS on. Containers → Gateway is the predefined allow-all, enabled; the only other rule on that pair is the predefined mDNS allow. Containers → Internal still ends in block all, and no user rule reaches the server VLAN
+  2. **Pass: nothing answers at either address.** From the admin laptop on the main LAN: DNS over UDP and over TCP timed out on both, and ping failed on both. The controller has never recorded a client at one address; the other's last client was the filter host, last seen 2024-08. A second filter host on the main LAN, last seen 2026-10-23, doesn't answer either. So the block is not what's breaking DNS today; there's no resolver behind it
+  3. **Pass: no live DHCP client on the VLAN.** The controller's live list shows one VLAN client, the VPN gateway container, which has a static address. The other containers (static, seen earlier today) drop out of the live list when quiet. The only client ever seen in the DHCP pool is the app VM's old address on its VLAN NIC, last seen 2026-10-20, and the VM's inventory says that NIC has no host address now. An unknown wired client outside the pool was last seen the same day. All 44 wireless clients online are on the main LAN. Impact today: none expected
+  4. **Pass, from outside the VLAN.** The gateway answered correct records on its address on this VLAN, queried from the main LAN, and the Containers → Gateway policy allows it. Not tested from a client inside the VLAN (see "Couldn't verify")
+  5. **Pass after an owner fix.** `change-window.sh status` first reported no restore point. The backup itself was fine: the manifest, read through the NAS read connection, showed last night's run with `archive_check: ok`. The gate couldn't log in to fetch it, because its NAS password command in `private/change-window.conf` still pointed at the vault the read-only logins left on 2026-10-29. No window had opened since then, so nothing hit this until now. That config is tier 3: the owner repointed the command through `op-ro-read` on 2026-10-31, and `status` now reports a NAS restore point inside the limit
+- Diff (one `unifi_update_network` call through the write connection, `confirm: true`):
+  - `dhcpd_dns_1`: `<server VLAN resolver 1>` -> `<this VLAN's gateway address>`
+  - `dhcpd_dns_2`: `<server VLAN resolver 2>` -> empty
+  - `dhcpd_dns_enabled` stays on. A dead second resolver stays out on purpose. If the tool refuses an empty value, the agent confirms by read that nothing changed and comes back; no substitute value is covered by this approval
+- Rollback: the same call with the two original values, which are in `private/changes.md`. Not needed
+- Verify (read connection, after the write): both fields read back as in the diff, nothing else on the network object changed; the policy list is unchanged; the gateway still answers on that address; the VLAN's clients are still present. Allow about a minute for the read to catch up (2026-10-28 finding)
+- Result:
+  1. Before (read connection, inside the window): the object matched this entry
+  2. Write (write connection, `unifi_execute` → `unifi_update_network`, `confirm: true`), one call, approved by the owner on the prompt. The tool reported both fields persisted, none dropped or coerced, and accepted the empty value
+  3. Verify (read connection, under a minute after the write): the two fields read as in the diff, and a before-and-after comparison of the whole object shows nothing else changed. The named Containers policies are unchanged. The gateway answered DNS on the VLAN address, queried from the main LAN. The VPN gateway container stayed online on the VLAN, and its uptime wasn't reset
+  4. The write connection was turned off afterwards
+- Not covered by the verify: the full policy list was re-read by name only, not all 92 rules; the wait was shorter than the usual minute because the new state was already showing; no DHCP client has taken a lease with the new DNS, since none is on the VLAN
+- Found on the way, not part of this change: the server VLAN hands out the same dead pair (see B4). The main LAN has the same pair stored with custom DNS off, so its clients get the gateway. A worktree has no `private/`, so `change-window.sh` silently runs on its defaults there, including the older flags mode, and reports no restore point even when one exists; a link to the real folder fixes that for one session, but git doesn't ignore the link (`.gitignore` matches a directory only)
+- Approved by / when: owner, in chat, 2026-10-31 ("Approve A2")
+- Couldn't verify: a DNS query from inside the VLAN (it needs `docker exec` on the app VM, which the inventory leaves out on purpose); flow data, because traffic flows returned nothing for this VLAN over 24 hours, so an empty result for these resolvers proves nothing; clients on the VLAN that the controller doesn't list (24 records have no address); whether the filter hosts ignore queries from other subnets, though failed ping and the client records point to them being gone
+
 ## 2026-10-31: Accept the NAS port forwards as a known risk (R1)
 - Status: proposed; accepted when the owner merges the PR
 - Target: docs only. `strategy.md` (T2 re-rated, new "Accepted risks" register), `network.md` (inbound section, finding 1), `backlog.md` (A1 reshaped). No device changes

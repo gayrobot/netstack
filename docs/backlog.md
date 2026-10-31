@@ -9,7 +9,7 @@ Columns: **Threat** is from the strategy's threat table. **Tier** is from [chang
 | ID | Item | Threat | Tier | Effort | Status |
 |---|---|---|---|---|---|
 | A1 | **Move the NAS's peer-to-peer download client behind the VPN gateway container, then close the two internet-facing port forwards.** Check done 2026-10-31: the forwards are that client's inbound peer port. Checks still open: the VPN provider offers port forwarding; the forwards map to the peer port only. Then: a client container in the app VM sharing the VPN gateway's network namespace, the download share mounted over NFS, the provider's forwarded port set in both, the kill switch verified, tasks moved over, the NAS client's peer-to-peer module off, both forwards disabled, verified from outside | T2 | 2 / owner | L | open; risk R1 accepted 2026-10-31 until this lands. Tried and rolled back 2026-10-28 because the check was skipped |
-| A2 | Fix DNS on the container VLAN: DHCP hands out resolvers the Containers zone can't reach | T1 | 2 | S | open |
+| A2 | Fix DNS on the container VLAN: DHCP hands out resolvers the Containers zone can't reach | T1 | 2 | S | done 2026-10-31: the VLAN's DHCP DNS now points at its own gateway, verified through the read connection (see `changes.md`). Nothing answered at the old resolvers. Stopgap until B4 |
 | A3 | Turn threat management (IPS) on for every network, not just the main LAN; watch gateway memory afterwards | T1 | 2 | S | open |
 | A4 | Set mDNS reflection to the services that need it instead of all, so the new VLANs in phase B don't see every service | T1 | 2 | S | open; do before B2 |
 | A5 | Unplug or isolate the travel router wired into an access-switch port | T1 | owner | S | open; physical |
@@ -28,7 +28,7 @@ Columns: **Threat** is from the strategy's threat table. **Tier** is from [chang
 | B1 | Owner decisions from the 2026-10-21 audit: which Wi-Fi network keeps the current name; whether to keep the DNS filter; whether servers move to the server VLAN now or later; which network the doorbell joins; any Matter or Thread devices; identify the unknown clients | – | owner | S | open; blocks B2 |
 | B2 | Create the IoT, camera and guest networks and zones and their policies, with no clients moved yet | T1 | 2 | M | open |
 | B3 | Guest Wi-Fi on the guest network: internet only | T1 | 2 | S | open |
-| B4 | DNS filter on the server VLAN at the address DHCP already expects, with a second resolver; or drop it and point DHCP at a working resolver (A2 is the stopgap) | T1 | 2 | M | open; depends on B1 |
+| B4 | DNS filter on the server VLAN at the address DHCP already expects, with a second resolver; or drop it and point DHCP at a working resolver (A2 is the stopgap) | T1 | 2 | M | open; depends on B1. Read 2026-10-31: nothing answers at those addresses, and the server VLAN hands out the same dead pair, so this item covers that VLAN too |
 | B5 | Cameras to the camera VLAN, one at a time, from the switch ports; the doorbell by Wi-Fi | T1 | 2 | M | open |
 | B6 | A trusted Wi-Fi network for phones, laptops and watches: WPA3 only, management-frame protection required | T1, T6 | 2 | M | open |
 | B7 | The home-automation VM gets a second NIC on the IoT VLAN, the way the app VM reaches the container VLAN | T1 | owner | M | open; VM host change |
@@ -78,6 +78,7 @@ One line per time a control got in the way. Reviewed monthly with the parking lo
 | 2026-10-28 | A task list showed a rollback as done while the second write still waited for approval; the prompt looked like a read and was denied | One step per write call |
 | 2026-10-29 | Every session start prompted 1Password up to four times | Read connections on a read-only token; write connections behind the write gate |
 | 2026-10-29 | New worktrees didn't inherit the project's MCP config, then did | Config moved to repo scope |
+| 2026-10-31 | The UniFi read plugin had been silently missing since 2026-10-29: worktree sessions take project settings from the main checkout, which had gone stale after PRs merged on GitHub | Main checkout fast-forwarded by hand |
 
 ## Couldn't verify
 
