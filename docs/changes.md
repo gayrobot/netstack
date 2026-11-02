@@ -34,7 +34,7 @@ Template:
   3. Package Center: auto-update now on for all packages (**changed by the owner**). It has no schedule; packages update when a release appears
   4. The gateway backup job runs daily at 01:30
 - Resulting order each night: backup 01:30 → gateway OS, apps and device firmware 03:00 → DSM 04:00. The restore point is 90 minutes old when the gateway updates. Package updates happen whenever a release appears; they aren't tied to the backup
-- Flagged for observability (owner, 2026-11-02): the first DSM auto-update tonight. A read-only check on the morning of 2026-11-03 confirms the DSM version moved past 7.4.1-90080, the NAS rebooted and is healthy, NFS is running, and the 01:30 backup still ran. Scheduled as a one-off local task at 06:30, using the NAS read connection only. From then on this is the patch-lag and post-update health detectors' job (O3, O4)
+- Flagged for observability (owner, 2026-11-02): the first DSM auto-update tonight. A read-only check on the morning of 2026-11-03 confirms the DSM version moved past 7.4.1-90080, the NAS rebooted and is healthy, and NFS is running. Scheduled as a one-off local task at 06:30, using the NAS read connection only. From then on this is the patch-lag and post-update health detectors' job (O3, O4)
 - Rollback: set DSM's update setting and Package Center's auto-update back to their earlier values in the same screens
 - Not in this entry: the post-update health checks. They are observer work and wait for O1
 - Approved by / when: owner, in chat, 2026-11-02 (the owner made the changes in the UIs)
