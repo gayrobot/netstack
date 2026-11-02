@@ -15,7 +15,7 @@ Template:
 ```
 
 ## 2026-11-02: Backlog A1, part 2 (close the two NAS peer-port forwards)
-- Status: proposed (tier 2). Do not start until part 1 is applied and verified
+- Status: proposed (tier 2). Do not start until part 1 is applied and verified. Also on hold with part 1
 - Target: gateway, the two WAN port forwards to the NAS (TCP+UDP, any source); the NAS download client's peer listener
 - Why: risk R1. The forwards expose the NAS download client's inbound peer port to the internet. Once its download tasks run in the new client container behind the VPN gateway (part 1), nothing needs the forwards
 - Preconditions: part 1 applied and verified; all peer-to-peer tasks moved off the NAS client and seeding from the new container; the owner confirms the NAS client's peer listener is off (the read account can't see that setting)
@@ -27,6 +27,7 @@ Template:
 
 ## 2026-11-02: Backlog A1, part 1 (new VPN provider and a second client container)
 - Status: proposed (tier 1 for the container work; tier 2 only if the new client's NFS folder needs a NAS share-permission change)
+- On hold (owner, in chat, 2026-11-02): the new provider account will be opened after the old provider's refund is processed. No approval has been given and no read-only checks have started. Ask the owner before resuming
 - Target: app VM (VPN gateway container, a second gateway + client pair); the NAS download share (NFS mount only)
 - Why: A1. Move peer-to-peer downloads behind the VPN gateway with a provider that offers inbound port forwarding. The current provider has none. The owner chose a new provider on 2026-11-02 (name in `private/changes.md`) that offers it over WireGuard: the port is assigned at connect and the gateway container supports it natively. Both private trackers the owner uses were checked by the owner and allow VPN use. The refund from the current provider is likely but pending
 - Diff:
