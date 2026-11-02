@@ -15,7 +15,7 @@ Template:
 ```
 
 ## 2026-11-02: Backlog A3, IPS on every internal network
-- Status: proposed (tier 2)
+- Status: **applied 2026-11-02**, verified; the 1-hour and 24-hour memory reads are still open (see Applied below)
 - Target: gateway, site-wide threat management (IDS/IPS), the list of protected networks
 - Why: threat T1. IPS is on in IPS (block) mode, but it inspects the main LAN only. The container VLAN, where the internet-facing VPN gateway and download containers run, and the server VLAN are not inspected. O10 (traffic anomalies) will read IPS events, so every network needs to be covered first
 - Current state (read connection, 2026-11-02): IPS enabled, mode `ips`, manual category selection, 26 categories on, 1 of 3 internal networks protected (main LAN). Gateway firmware 5.1.34, controller 10.6.109, memory 74.6%, load average 2.88 (1 min), uptime 4 days
@@ -34,7 +34,17 @@ Template:
   3. Gateway memory and load read again after one hour and after 24 hours. **Roll back if memory stays above 90%**, or if throughput drops in a way the owner notices
 - Rollback: in the same UI, deselect the container and server VLANs. Nothing else changes, so no restore is needed
 - Follow-up: B2 adds the IoT, camera and guest networks to IPS when it creates them (noted on B2)
-- Approved by / when: pending
+- Applied:
+  1. Checks: restore point from the NAS job, 11 hours old (`change-window.sh open`, 19:04Z); memory 73.4% just before; mode, categories and coverage as in "Current state"
+  2. The owner selected the container and server VLANs in the UI (CyberSecure → Threat Management → Intrusion Prevention → Selected Networks) and saved
+  3. Read connection: all three internal networks protected; mode `ips`, traffic identification and fingerprinting unchanged
+  4. **Deviation, accepted by the owner:** the save dropped the `emerging-icmp` category (26 → 25). Network 10.6's UI doesn't offer it in any group (the owner checked every group and searched), so it was a leftover from an older version that any UI save would drop. Not restored through the API: the tool validates codes against the gateway's catalog, and the next UI save would drop it again
+  5. The owner checked from a main-LAN device: the container web apps load and downloads progress through the VPN
+  6. Memory 74.4% and load 3.83, ten minutes after (73.4% and 3.71 before). No IPS events involving the container or server VLANs yet
+  7. `change-window.sh close` (19:14Z)
+- Still open: memory and IPS events read after 1 hour and after 24 hours; roll back if memory stays above 90% or an IPS block hits the VPN gateway container
+- Found on the way: the IPS event log shows six high-severity blocks in the last day, all from one outside address to the NAS through the peer-port forwards (risk R1). Noted on A1
+- Approved by / when: owner, in chat, 2026-11-02 ("Run change window"); deviation accepted in chat ("accept ICMP")
 
 ## 2026-11-02: Daily scope check in the harness
 - Status: applied 2026-11-02 (PR 20 merged); the local scheduled task runs it each morning. The owner asked for it in chat, 2026-11-02 ("make this a daily check ... part of the harness")
