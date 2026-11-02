@@ -33,7 +33,7 @@ The imbalance is the problem this document fixes. Governance isn't wrong; it's a
 | T5 | The agent makes a wrong or injected change | Reads untrusted data (device names, SSIDs, docs) with write tools present | **Low.** This is the best-covered threat: read/write split, per-call approval, restore-point gate, change log |
 | T6 | A leaked or stolen credential (laptop, cloud account, VPN peer) | Normal | **Medium.** 1Password holds the agent's credentials; UniFi cloud account MFA, VPN peer list and NAS default accounts are unreviewed |
 
-Out of scope: targeted nation-state attack, physical break-in, the ISP.
+Out of scope: targeted nation-state attack, physical break-in, the ISP. Physical access inside the house is trusted (owner's call, 2026-11-02), so controls aimed at someone plugging a device into a wall or switch port aren't proposed.
 
 ### Accepted risks
 
@@ -74,7 +74,7 @@ Dates assume one to three items a week. They're a pace, not a promise.
 
 | Phase | Window | What | Done when |
 |---|---|---|---|
-| A. Quick wins | now to mid-November 2026 | Items that are one toggle, one setting or one owner checklist and need no segmentation: the NAS port forwards, broken DNS on the container VLAN, threat management on every network, mDNS scope, the travel router, the unknown-state switch, VPN peers, admin accounts and MFA, NAS default accounts | T2 and T6 drop to low; nothing on the quick-wins list is open |
+| A. Quick wins | now to mid-November 2026 | Items that are one toggle, one setting or one owner checklist and need no segmentation: the NAS port forwards, broken DNS on the container VLAN, threat management on every network, the unknown-state switch, VPN peers, admin accounts and MFA, NAS default accounts | T2 and T6 drop to low; nothing on the quick-wins list is open |
 | B. Segmentation | mid-November to end of December 2026 | IoT, camera and guest networks and zones; a trusted Wi-Fi network for phones and laptops; the existing Wi-Fi network becomes IoT-only; the home-automation VM gets a leg on the IoT network; Internal → Containers becomes per-service allows | T1 drops to low; a phone on the IoT or guest network can't reach a server or a container admin UI |
 | C. Servers | January to mid-February 2027 | NAS: firewall, data-share snapshots, off-site backup, scrub schedule, share clean-up. App VM: rpcbind off, NFS export restricted, read-only Docker access for inventory, images pinned by digest, the monitoring container back | T3 and T4 drop to low; a test restore of a data share succeeds |
 | D. Detect and sustain | from February 2027, ongoing | Drift detection (CLAUDE.md phase 2), a quarterly gateway test restore, alerts for the things that failed silently this month (a switch offline, a container exited, gateway memory), the review dates in the rubrics | A change made outside the agent shows up as a diff within a day |
