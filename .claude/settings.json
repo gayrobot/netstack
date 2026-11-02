@@ -24,6 +24,11 @@
             "type": "command",
             "command": "[ -x \"$HOME/.local/bin/op-rotate\" ] && python3 -I \"$HOME/.local/bin/op-rotate\" status --hook || true",
             "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "sh \"$CLAUDE_PROJECT_DIR/scripts/daily-check.sh\" status --hook || true",
+            "timeout": 10
           }
         ]
       }
