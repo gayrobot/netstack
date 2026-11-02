@@ -77,10 +77,10 @@ One per device class. Each reads through the existing read account, writes recor
 | Gateway | Devices and firmware, networks and VLANs, DHCP scopes and leases, clients, port forwards, firewall policies, VPN peers, admin accounts, alerts, IPS events, memory | UniFi read account (View Only) | build first; this is drift detection (was D1) done properly |
 | NAS | DSM version, packages and their versions, shares and permissions, NFS rules, snapshot schedules, login log, the backup job's manifest | NAS read account; `synology-extras` for package versions (exception EX-1) | build second |
 | App VM | OS and package state, pending security updates, listeners, container list with image digests and states | A read-only Docker API proxy and a user with neither `docker` nor `sudo` (backlog C5; pulled forward because this collector needs it) | after C5 |
-| VM host | macOS version, VMs and their state, listeners | Remote Login is off on the host, so there's no read path today. Either a read-only SSH account (tier 3, owner) or this waits for the Linux move | not yet |
+| VM host | macOS version, VMs and their state, listeners | A small script under `launchd` on the host that posts records to the observer. Remote Login is off, so the path is local: Claude Code is installed on the host and writes and installs the script (tier 3, the owner runs the install); it does not run the collection itself. Rewritten, not redesigned, at a Linux move | build with O2 |
 | Home-automation VM | OS version, the plugin's version, its credentials | after B7 gives it a network leg the observer can reach, and after A12 vets the plugin | not yet |
 | Feeds | CISA KEV; Ubiquiti security advisories; Synology security advisories; Ubuntu security notices; image vulnerability scans | Pinned sources, each with its own vetting entry | build with the advisory detector |
-| Identities | Every account, token, VPN peer and agent credential the house has, with owner, scope and age | Gathered from the other collectors plus a hand-kept list in `private/` for the ones no API shows | build third |
+| Identities | Every account, token, VPN peer and agent credential the house has, with owner, scope and age. Includes every Claude Code install in the house (the admin laptop, the VM host) and the tokens each holds, since an always-on host with an agent on it is a standing credential | Gathered from the other collectors plus a hand-kept list in `private/` for the ones no API shows | build third |
 
 ## Detectors
 
@@ -172,6 +172,7 @@ D1 and D3 from the backlog are O2, O3 and O5. D2 (the quarterly test restore) an
 - The current state of the network and hosts. This was written from the repo's docs; the first collector run is the first fresh read.
 - That UniFi auto-update is on for the gateway and the switches, and what its schedule is. The owner said it is; O5 confirms it from the read account.
 - Whether DSM's auto-install covers the packages the house runs, or only DSM itself.
+- What credentials the Claude Code install on the VM host holds today, and whether it's the "admin laptop" in `CLAUDE.md` or a second install
 - Whether the UniFi read account can see firmware availability (not just the installed version). If not, the Ubiquiti feed carries that.
 - Whether the push channel chosen at vetting supports a reply, which decides how *mine* gets back to the observer.
 - That a read-only Docker API proxy exposes image digests (it should; it's a plain `GET`).

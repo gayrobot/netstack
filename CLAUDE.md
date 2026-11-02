@@ -42,5 +42,5 @@ A home network (UniFi Dream Machine Pro, a Mac Pro VM host and the VMs on it) ru
 
 ## Environment notes
 
-- Claude Code runs on an admin laptop and reaches hosts over SSH.
+- Claude Code runs on an admin laptop and reaches hosts over SSH. It is also installed on the VM host itself (owner, 2026-11-02); the observer's VM host collector uses that local path (`docs/spec.md`).
 - The VM host runs no containers itself. Containers run in a Linux VM attached to a VLAN through macvlan, so the UDM's zone firewall decides who can reach them, not Docker port mappings.
