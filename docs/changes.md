@@ -14,6 +14,16 @@ Template:
 - Approved by / when:
 ```
 
+## 2026-11-02: System definition (spec.md) and the observer phase
+- Status: proposed (docs only, no device change). Tier 3 in effect: it changes what the controls serve and adds a phase to the backlog, so the owner approves by merging
+- Target: `docs/spec.md` (new), `docs/strategy.md`, `docs/backlog.md`, `docs/vetting/README.md`, `CLAUDE.md`
+- Why: the owner's call, in chat, 2026-11-02: the repo had governed only the write path. The owner wants a top-down management plane for the house's infrastructure that keeps up with advisories and with what changes at home on its own, with every target updating itself. The strategy's "governance ahead of the work" diagnosis was half of it; the other half is that the watching layer was never specified
+- Diff: `spec.md` defines the system by outcomes, the three planes, the observer (collectors → store → detectors → notifier / proposer / patch lane / interpreter / view), the patch lane (vendor updaters do the update; the observer verifies), what happens on each kind of infrastructure change, and the observer's own governance. `strategy.md` gets a re-cut note, an amended principle 2 and a Phase O. `backlog.md` gets Phase O (O1–O10), supersedes D1 and D3, parks the broker with a reason, and records two owner calls (everything auto-updates; home-automation automations are out of scope). `vetting/README.md` lists what the observer will need reviewed. `CLAUDE.md` points at `spec.md` first and adds phase 4
+- Decisions recorded from chat: the observer never writes except the container-image lane in the app VM; it runs as a container on the app VM; push notification is the interrupt channel; the gateway auto-updates like everything else, with the backup job scheduled before its window
+- Checks: `scripts/check-public.sh tree` passes with the local denylist; the `check-public` CI job repeats it with the real one
+- Rollback: revert the PR
+- Approved by / when: pending
+
 ## 2026-11-02: Backlog A1, part 2 (close the two NAS peer-port forwards)
 - Status: proposed (tier 2). Do not start until part 1 is applied and verified. Also on hold with part 1
 - Target: gateway, the two WAN port forwards to the NAS (TCP+UDP, any source); the NAS download client's peer listener

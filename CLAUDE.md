@@ -7,6 +7,7 @@ A home network (UniFi Dream Machine Pro, a Mac Pro VM host and the VMs on it) ru
 1. Read-only inventory and docs: **done**.
 2. Scheduled config backups: **done** (nightly, off-box, encrypted). Drift detection: not started.
 3. Writes: **active since 2026-10-28**, through write connections where the owner approves every call (rule 5).
+4. The observer (`docs/spec.md`): **proposed 2026-11-02**, not built. An always-on container that watches inventory, advisories, drift, health and patch state, and proposes into the write path. Drift detection moves here.
 
 ## Rules
 
@@ -26,7 +27,8 @@ A home network (UniFi Dream Machine Pro, a Mac Pro VM host and the VMs on it) ru
 
 ## Layout
 
-- `docs/strategy.md` + `docs/backlog.md`: what we're protecting, from what, in what order; the ordered list of work. Start here
+- `docs/spec.md`: what the system is and does, judged from the owner's side (outcomes, planes, the observer, the patch lane). Start here
+- `docs/strategy.md` + `docs/backlog.md`: what we're protecting, from what, in what order; the ordered list of work
 - `docs/network.md`: VLANs, zones, inbound exposure (role names)
 - `docs/hosts/`: one page per host role
 - `docs/changes.md`: change log (proposed, approved, applied, rejected)
@@ -40,5 +42,5 @@ A home network (UniFi Dream Machine Pro, a Mac Pro VM host and the VMs on it) ru
 
 ## Environment notes
 
-- Claude Code runs on an admin laptop and reaches hosts over SSH.
+- Claude Code runs on an admin laptop and reaches hosts over SSH. It is also installed on the VM host itself (owner, 2026-11-02); the observer's VM host collector uses that local path (`docs/spec.md`).
 - The VM host runs no containers itself. Containers run in a Linux VM attached to a VLAN through macvlan, so the UDM's zone firewall decides who can reach them, not Docker port mappings.

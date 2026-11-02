@@ -48,3 +48,18 @@ Copy this into `docs/vetting/<name>.md` and fill in every line. Write "not check
 | Synology MCP (atom2ueki/mcp-server-synology) | 1.8.0 | **Not OK as configured** (admin account, 43 ungated write tools) | [synology-mcp.md](synology-mcp.md) |
 | synology-extras (first-party, `tools/synology-extras/`) | 0.1.0 | OK with conditions (not registered yet) | [synology-extras.md](synology-extras.md) |
 | HomeClaw plugin | 1.0.13 | **Not vetted** (already installed) | pending |
+
+### Wanted by the observer ([spec.md](../spec.md)), not yet reviewed
+
+Nothing below is installed. Each gets a review before its backlog item starts.
+
+| Tool | For | Backlog | Review |
+|---|---|---|---|
+| Push notification channel (candidates: self-hosted ntfy, Pushover) | O1; carries the names of what's in the house, so it's reviewed like a connector | O1 | pending |
+| CISA KEV catalog (JSON) | O4 | O4 | pending |
+| Ubiquiti security advisories | O4 | O4 | pending |
+| Synology security advisories | O4 | O4 | pending |
+| Ubuntu security notices (USN JSON) | O4 | O4 | pending |
+| Image vulnerability scanner (candidates: Trivy, Grype) | O4, and the "validated" check in the container-image lane | O4, O6 | pending |
+| Read-only Docker API proxy | the app VM collector | C5, O6 | pending |
+| Container-image updater | the one autonomous write; build-or-adopt step 3 before step 4 | O6 | pending; search for a maintained digest-pinning updater first |
