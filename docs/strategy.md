@@ -1,8 +1,8 @@
 # Security strategy
 
-**Status:** proposed 2026-10-29. **Review:** every Sunday (30 minutes, see "Rhythm"); the whole document by 2027-01-29.
+**Status:** proposed 2026-10-29; re-cut 2026-11-02 against [spec.md](spec.md). **Review:** every Sunday (30 minutes, see "Rhythm"); the whole document by 2027-01-29.
 
-This is the document the rest of the repo serves. It says what we're protecting, from what, in what order, and how the work moves. The ordered list of work is [backlog.md](backlog.md).
+This document says what we're protecting, from what, in what order, and how the work moves. What the system *is* and what it does for the owner is [spec.md](spec.md), which this serves. The ordered list of work is [backlog.md](backlog.md).
 
 ## Goal
 
@@ -17,6 +17,8 @@ A compromised phone or IoT device, an exploited internet-facing service, a bad c
 | Work pattern | Reactive. A friction point appears (1Password prompts, a security advisory, a switch that dropped off), a session fixes it, and the fix becomes a control or a tool. Each fix was good. The sum is a governance system with nothing to govern yet, and the owner's time going to the tooling instead of the network |
 
 The imbalance is the problem this document fixes. Governance isn't wrong; it's ahead of the work it exists for.
+
+**Re-cut, 2026-11-02.** The diagnosis above was half right. Governance was ahead of the posture work, but the bigger gap was that the repo governed only the write path (an agent, in a session, changing the network) and never specified the watching layer: inventory, advisories, drift, health, patch state. That's most of what managing a home network is, and none of it ran on its own. [spec.md](spec.md) defines it as the observer, with the write-path controls as the spine it proposes into. The backlog now has an observer phase (O) that runs alongside A and B rather than after them, because it doesn't depend on segmentation. The one thing that does, traffic anomaly detection, still waits for Phase B.
 
 ## What we're protecting, from what
 
@@ -46,7 +48,7 @@ Risks the owner has looked at and chosen to carry for now, with what would end t
 ## Principles
 
 1. **Posture first.** The backlog is the work. Governance exists so the backlog can move safely, and is judged by how much backlog it lets through.
-2. **Governance is pull, not push.** A control, tool or rubric gets built when a backlog item needs it, or after a real incident. "This would be nice" goes to the parking lot in [backlog.md](backlog.md), and the parking lot is reviewed monthly, not acted on as it fills.
+2. **Governance is pull, not push.** A control, tool or rubric gets built when a backlog item needs it, or after a real incident. "This would be nice" goes to the parking lot in [backlog.md](backlog.md), and the parking lot is reviewed monthly, not acted on as it fills. The observer is the pull: its collectors and detectors are the work, and the governance it needs (feed vetting, the demotion rule, the patch policy) is listed in [spec.md](spec.md) and built with it, not ahead of it.
 3. **Segment before you harden.** VLANs and zones remove the most risk per hour and make most other items smaller. They come right after the quick wins.
 4. **Biggest risk per hour first.** Order by threat (T1 to T6) and effort, not by what's interesting or what just broke.
 5. **One item, one session, one PR.** A session is named after a backlog ID and ends when its PR merges. A second thing that comes up inside a session becomes a backlog line, not a detour. (This is what "we're using git wrong" was: sessions that drift, branches that outlive their PR, worktrees nobody closes.)
@@ -77,7 +79,8 @@ Dates assume one to three items a week. They're a pace, not a promise.
 | A. Quick wins | now to mid-November 2026 | Items that are one toggle, one setting or one owner checklist and need no segmentation: the NAS port forwards, broken DNS on the container VLAN, threat management on every network, the unknown-state switch, VPN peers, admin accounts and MFA, NAS default accounts | T2 and T6 drop to low; nothing on the quick-wins list is open |
 | B. Segmentation | mid-November to end of December 2026 | IoT, camera and guest networks and zones; a trusted Wi-Fi network for phones and laptops; the existing Wi-Fi network becomes IoT-only; the home-automation VM gets a leg on the IoT network; Internal → Containers becomes per-service allows | T1 drops to low; a phone on the IoT or guest network can't reach a server or a container admin UI |
 | C. Servers | January to mid-February 2027 | NAS: firewall, data-share snapshots, off-site backup, scrub schedule, share clean-up. App VM: rpcbind off, NFS export restricted, read-only Docker access for inventory, images pinned by digest, the monitoring container back | T3 and T4 drop to low; a test restore of a data share succeeds |
-| D. Detect and sustain | from February 2027, ongoing | Drift detection (CLAUDE.md phase 2), a quarterly gateway test restore, alerts for the things that failed silently this month (a switch offline, a container exited, gateway memory), the review dates in the rubrics | A change made outside the agent shows up as a diff within a day |
+| O. Observer | from November 2026, alongside A and B | The watching layer in [spec.md](spec.md): the observer container, collectors, drift and health detection, advisory matching, the patch lane, the identity inventory. Replaces the detection half of the old Phase D | The six outcomes in spec.md, checked at the Sunday review |
+| D. Sustain | ongoing | A quarterly gateway test restore, the review dates in the rubrics, the traffic-anomaly detector once Phase B is done | A test restore has succeeded in the last quarter; nothing in the rubrics is past review |
 
 ## Couldn't verify
 

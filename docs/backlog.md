@@ -50,20 +50,37 @@ Columns: **Threat** is from the strategy's threat table. **Tier** is from [chang
 | C8 | Synology MCP: run from the hash lock, fixed working directory, TLS verification on (an admin password is sent with verification off) | T5, T6 | 3 | S | proposed 2026-10-26, pending |
 | C9 | UniFi MCP: run from the hash-locked environment instead of re-resolving on every start | T5 | 3 | S | proposed 2026-10-26, pending |
 
-## Phase D: detect and sustain
+## Phase O: observer (alongside A and B)
+
+The watching layer from [spec.md](spec.md). It doesn't depend on segmentation, so it runs in parallel with A and B. Each item's "done when" is in the spec's build-order table; the outcome it serves is listed here.
 
 | ID | Item | Threat | Tier | Effort | Status |
 |---|---|---|---|---|---|
-| D1 | Drift detection: a nightly read of the gateway config through the read connection, diffed against the last approved state, with a diff written somewhere the Sunday review sees | T5, T6 | 0 | L | not started (CLAUDE.md phase 2) |
+| O1 | Observer container on the app VM: scheduler, SQLite store, push notifier (channel chosen at vetting), view skeleton. A test event reaches the owner's phone | T5, T6 | 3 (new workload, new credential) | M | open; needs vetting entries for the push channel |
+| O2 | Gateway collector + unapproved-change detector; baseline from the current approved state; `docs/network.md` regenerated from the store | T5, T6 | 0 | L | open; closes D1 (outcome 3) |
+| O3 | NAS collector; backup-stale and backup-job health detectors from the job's manifest | T4 | 0 | M | open (outcome 3) |
+| O4 | Feeds collector (KEV, Ubiquiti and Synology advisories, Ubuntu security notices, image scans) + advisory-match and patch-lag detectors | T2, T3 | 0 | L | open; needs one vetting entry per feed (outcome 2) |
+| O5 | Patch lane, vendor side: auto-update on for the gateway, switches, APs and DSM (owner checklist, tier 3); backup job rescheduled before the gateway's update window; post-update health checks in the observer | T2, T3 | owner + 0 | S | open (outcome 4). The owner says UniFi auto-update is already on; confirm from the read account |
+| O6 | App VM collector (needs C5) and the container-image updater: new digest → pull → health check → digest bump committed to the compose repo; rollback on failure. The only autonomous write | T3 | 1 (scoped to the compose repo and the Docker socket) | L | open; blocked by C5 (outcome 4) |
+| O7 | Identity inventory and detector: every account, token, VPN peer and agent credential with an owner and an age; pages on a new admin, a new peer or an aged token | T6 | 0 | M | open; folds in the review half of A8 and A9 once they're done by hand |
+| O8 | Interpreter: Claude drafts the Sunday digest and the proposals from the store's records, with a budget; the system is complete without it | T5 | 3 | M | open; after O2–O4 produce records worth explaining |
+| O9 | Host pages regenerated from the store; the hand-written `docs/hosts/` retired | – | 0 | S | open (outcome 5) |
+| O10 | Traffic-anomaly detector (IPS events, egress, DNS) | T1 | 0 | M | **after Phase B**; no baseline on a flat LAN |
+
+## Phase D: sustain
+
+| ID | Item | Threat | Tier | Effort | Status |
+|---|---|---|---|---|---|
+| D1 | ~~Drift detection~~ | T5, T6 | – | – | superseded by O2 and O3, 2026-11-02 |
 | D2 | Quarterly gateway test restore into a throwaway controller; date recorded in the backup manifest | T4 | owner | M | open |
-| D3 | Alerts for what failed silently this month: a switch offline, a container exited, gateway memory above a threshold | T1, T3 | 0 | M | open |
+| D3 | ~~Alerts for what failed silently~~ | T1, T3 | – | – | superseded by the health detector in O2, O3 and O5, 2026-11-02 |
 | D4 | Review dates: exceptions and rubrics on 2027-01-29; read-only token rotation (automated, one approval) | T5 | 3 | S | scheduled |
 
 ## Parking lot: governance ideas with no backlog item yet
 
 Reviewed monthly. Built only when an item above needs it.
 
-- Broker / MCP proxy on a separate host, policy engine, tier-1 auto-approval ([jit-design.md](jit-design.md)). Needs: the agent making changes on a schedule. Not yet
+- Broker / MCP proxy on a separate host, policy engine, tier-1 auto-approval ([jit-design.md](jit-design.md)). Needs: the agent making changes on a schedule. Not yet. 2026-11-02: the observer ([spec.md](spec.md)) proposes rather than writes, and the one scheduled write (container images, O6) is scoped to the app VM, so this stays parked
 - Category-scoped change windows (proposed 2026-10-26). Needs: the flag-flipping window mode, which the write connections replaced
 - A `SessionStart` warning for passed review-by dates. Needs: a review date to pass
 - Server-side denylist CI with other contributors. Needs: other contributors
@@ -77,6 +94,8 @@ Recorded 2026-11-02 so no session has to be told again. This is a home, not an e
 - The travel routers on the network are the owner's arcade-game gateways, some offline. Don't call them rogue.
 - Don't propose a control whose benefit depends on a segmentation step that hasn't happened (mDNS scoping before the IoT VLAN exists). Put it in the item that creates the segments.
 - Spending on a different VPN provider is acceptable to get A1 done.
+- Everything updates itself (owner, 2026-11-02). Don't propose "notify and click" for any patch target; propose the vendor's auto-updater plus a check that it ran. The observer verifies, it doesn't install.
+- Home-automation syncs and automations (calendars, HomeKit scenes) are plane 3 in [spec.md](spec.md): not this repo's concern. Their hosts and credentials are.
 
 ## Friction log
 
