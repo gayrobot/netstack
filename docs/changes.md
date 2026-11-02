@@ -47,15 +47,14 @@ Template:
   - A10.1 (screenshot): built-in `admin` and `guest` are both **deactivated**
   - A10.2 (screenshot): ten local accounts. Besides the two built-ins: the owner's daily account (2FA **on**), a second owner account (2FA off), the agent's read and write accounts, the gateway-backup job and reader accounts, and two accounts used by home services. Names in `private/changes.md`. Every account but the owner's daily one has 2FA off. That's expected for service accounts, which can't do 2FA; it matters only for accounts that are admins
   - A10.2: no service account is in the administrators group (owner)
-  - A10.3: the second owner account is **deactivated** (owner). The screenshot showed it as Normal, so it was deactivated after the screenshot or the screenshot was stale; not re-checked. The only active admin is the owner's daily account, with 2FA on
+  - A10.3 (screenshot, correcting an earlier answer): the second owner account is **active, not an admin**. Its groups are `users` and `http` (DSM's group for the web server). So the only admin is the owner's daily account, with 2FA on. The second account has 2FA off, which is acceptable for a non-admin. Open: whether anyone uses it, and why it's in `http`; see the backlog note
   - A10.4: QuickConnect is **off** (screenshot)
   - A8.2: Teleport's Manage view doesn't list enrolled devices, so the peer list can't be checked from the console. The owner names three devices. Left to O7 (identity inventory), which needs a source that lists Teleport peers
 - Rollback: re-enable what was disabled in the same screens. A deleted VPN peer can't be restored; it's recreated with a new key and the device re-imported
 - Approved by / when: tier 3, the owner makes each change
 - Couldn't verify:
   - Teleport's enrolled devices: no list in the console, and the read account can't see Teleport at all
-  - That the second owner account on the NAS is deactivated: the screenshot predates the owner's answer; the NAS read account can't list users
-  - Group membership on the NAS: from the owner's answer, not a screenshot
+  - The NAS group membership of the other accounts: from the owner's answer, not screenshots; the NAS read account can't list users
   - Which app the third permission icon in the console user list is (inferred: Network, Protect, and one more)
 
 ## 2026-11-02: Backlog O5, patch lane (vendor side)
