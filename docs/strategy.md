@@ -58,6 +58,8 @@ Risks the owner has looked at and chosen to carry for now, with what would end t
 
 ## Rhythm
 
+**Daily, scheduled.** The `daily-check` skill (`.claude/skills/daily-check/`) reads what changed in the scope documents since the last check, checks the leading candidates through the read connections, and recommends one item. It runs every morning as a local scheduled task, and a session that starts before it has run that day says so. It recommends and stops; it doesn't replace the Sunday pick.
+
 **Weekly, Sunday, 30 minutes.** Open [backlog.md](backlog.md). Mark what got done. Pick one to three items for the week, in order. Archive every session whose PR merged. Close every worktree whose branch merged. Add any friction lines to the parking lot. Nothing else.
 
 **Per item.** Start a session named after the backlog ID. The session: reads current state through the read connections; writes the proposal in `changes.md` with its checks; stops for approval; applies through the write connection (or hands the owner a checklist for tier 3); verifies through the read connection; logs; opens the PR; stops. Anything it notices on the way becomes a backlog line.

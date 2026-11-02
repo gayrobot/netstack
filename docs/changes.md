@@ -14,6 +14,15 @@ Template:
 - Approved by / when:
 ```
 
+## 2026-11-02: Daily scope check in the harness
+- Status: proposed (repo harness only, no device change). The owner asked for it in chat, 2026-11-02 ("make this a daily check ... part of the harness"); approves by merging
+- Target: `scripts/daily-check.sh` (new), `.claude/skills/daily-check/SKILL.md` (new), a third `SessionStart` hook in `.claude/settings.json`, `docs/strategy.md` (Rhythm), `CLAUDE.md` (Layout)
+- Why: "what's next" kept being answered from the backlog's text alone (friction log, 2026-11-02). A daily check reads the scope changes, filters by the owner calls, checks the candidates through the read connections, then recommends
+- Diff: the script reports scope commits on `origin/main` since the last check and the open backlog rows, and records each run in the git common dir (untracked, shared by worktrees). The skill does the reading and the recommendation, read-only. The hook prints one line when the check hasn't run today. A local scheduled task (the owner's machine, not tracked) runs the skill each morning
+- Checks: `scripts/check-public.sh tree` passes; the script ran against today's `origin/main`
+- Rollback: revert the PR; delete the scheduled task; remove `.git/netstack-daily-check`
+- Approved by / when: pending
+
 ## 2026-11-02: System definition (spec.md) and the observer phase
 - Status: proposed (docs only, no device change). Tier 3 in effect: it changes what the controls serve and adds a phase to the backlog, so the owner approves by merging
 - Target: `docs/spec.md` (new), `docs/strategy.md`, `docs/backlog.md`, `docs/vetting/README.md`, `CLAUDE.md`
