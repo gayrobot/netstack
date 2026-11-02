@@ -14,6 +14,37 @@ Template:
 - Approved by / when:
 ```
 
+## 2026-11-02: Backlog A1, part 2 (close the two NAS peer-port forwards)
+- Status: proposed (tier 2). Do not start until part 1 is applied and verified
+- Target: gateway, the two WAN port forwards to the NAS (TCP+UDP, any source); the NAS download client's peer listener
+- Why: risk R1. The forwards expose the NAS download client's inbound peer port to the internet. Once its download tasks run in the new client container behind the VPN gateway (part 1), nothing needs the forwards
+- Preconditions: part 1 applied and verified; all peer-to-peer tasks moved off the NAS client and seeding from the new container; the owner confirms the NAS client's peer listener is off (the read account can't see that setting)
+- Diff: disable both port forwards (disable, don't delete, so rollback is one toggle). No other firewall, VLAN or routing change
+- Process: chat approval of this entry; owner told a 1Password prompt is coming; `write-gate on unifi-write`; `scripts/change-window.sh open "A1: close NAS peer-port forwards"`; apply; verify; `close`
+- Verify: both ports closed when probed from outside the network; the new client still reports a connectable forwarded port; seeding continues; the NAS web UI and shares unaffected
+- Rollback: re-enable the two forwards (the 2026-10-28 attempt was rolled back the same way). Move the tasks back to the NAS client if needed
+- Approved by / when: pending
+
+## 2026-11-02: Backlog A1, part 1 (new VPN provider and a second client container)
+- Status: proposed (tier 1 for the container work; tier 2 only if the new client's NFS folder needs a NAS share-permission change)
+- Target: app VM (VPN gateway container, a second gateway + client pair); the NAS download share (NFS mount only)
+- Why: A1. Move peer-to-peer downloads behind the VPN gateway with a provider that offers inbound port forwarding. The current provider has none. The owner chose a new provider on 2026-11-02 (name in `private/changes.md`) that offers it over WireGuard: the port is assigned at connect and the gateway container supports it natively. Both private trackers the owner uses were checked by the owner and allow VPN use. The refund from the current provider is likely but pending
+- Diff:
+  1. Existing gateway container: change the provider, with a WireGuard config generated with port forwarding enabled; turn the container's port forwarding on; pin one server so the exit IP is stable; an up-command sets the client's listening port to the assigned port on each (re)connect. Keep the old provider config until the refund is confirmed
+  2. New second gateway container + second client container sharing its network namespace, for the private-tracker downloads: its own container-VLAN static IP, its own WireGuard config and pinned server (a different exit IP from the first), its own forwarded port. Uses a second device slot on the new account
+  3. The new client gets its own folder on the existing download share over NFS. Share permissions change only if that path isn't already covered; if so, split it out as a tier-2 entry
+  4. Download tasks move from the NAS client to the new client (hash-recheck against existing files). The NAS client keeps HTTP/FTP tasks
+- No gateway change in this part. The new containers sit on the existing container VLAN; the owner checks that the existing zone rules still fit
+- Verify (each gateway container): the exit IP is the new provider's and differs between the two; the forwarded port reads open from outside; the kill switch holds when the tunnel is stopped (no traffic leaves outside it); DNS doesn't leak; after a container restart the client's listening port matches the newly assigned one
+- Rollback: restore the old provider config in the first gateway container and restart; stop and remove the second pair; resume the original NAS client tasks (they aren't deleted until part 2 is verified)
+- Approved by / when: pending
+- Couldn't verify (parts 1 and 2):
+  - The gateway container's current environment on the running container (not in tracked docs)
+  - The exact up-command call into the client's web API and its auth on this instance
+  - Whether the new client's NFS folder needs a NAS share-permission change
+  - How the provider treats a lingering session after an unclean disconnect, and how often the assigned port changes in practice
+  - Whether the NAS client's peer listener is off (the read account can't see it)
+
 ## 2026-11-02: Backlog A5 (travel router) and A7 (unused switch ports)
 - Status: **rejected** by the owner, in chat
 - Target: access switches (A7); a router wired into a switch port (A5)
