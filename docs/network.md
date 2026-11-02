@@ -9,7 +9,7 @@
 | Main LAN | untagged | 10.0.0.0/23 | Internal | prefix delegation + SLAAC (global addresses) | Flat: gateway, VM host, app VM's management NIC, NAS, home automation, clients |
 | Container VLAN | 2 | 10.0.2.0/24 | **Containers** (custom) | none | App containers on macvlan, static IPs |
 | Server VLAN | 3 | 10.0.3.0/24 | Internal | none | Meant for internal DNS resolvers; nothing answered there on 2026-10-31 |
-| Remote-user VPN | – | 192.168.3.0/24 | Vpn | – | WireGuard |
+| Remote-user VPN | – | 192.168.2.0/24 | Vpn | – | Teleport (owner's phone, laptop and tablet). The WireGuard server on 192.168.3.0/24 listed earlier is gone (owner's screenshot, 2026-11-02). The read account can't see Teleport |
 | WAN 1 / WAN 2 | – | – | External | WAN 2 delegates the v6 prefix | |
 
 ## Containers zone

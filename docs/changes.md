@@ -14,6 +14,49 @@ Template:
 - Approved by / when:
 ```
 
+## 2026-11-02: Backlog A8, A9, A10 (VPN peers, gateway admins, NAS accounts)
+- Status: **applied 2026-11-02** by the owner (tier 3: accounts and authentication are never changed through the agent. The agent read what it could and wrote the checklist; the owner checked and changed things in the UIs and answered in chat)
+- Target: the gateway's remote-user VPN and its peers; the gateway console's admin accounts and the owner's cloud account; the NAS's local accounts, 2FA and QuickConnect
+- Why: T6 in `strategy.md`. None of these has been reviewed since the 2026-10-21 audit. O7 (identity inventory) takes over the ongoing review once these are done by hand
+- Read (2026-11-02, read connections):
+  - Gateway VPN: `unifi_list_vpn_servers` and `unifi_list_vpn_clients` both return **0**, and `unifi_list_networks` shows no VPN network. But `network.md` lists a WireGuard remote-user VPN (Vpn zone). Either it was removed, or the View Only account can't see it. Can't tell which from here. Checklist A8
+  - Gateway management: `unifi_idp_enabled: true` (UniFi Identity is on; its one-click VPN is a second remote-access path besides WireGuard), `wifiman_enabled: true`, no SSH password set, debug tools off. The Network API has no tool that lists console admins. Checklist A9
+  - NAS: `synology_list_users` and `synology_services` both return **code 105 (no permission)**. The NAS read account isn't an admin, so it can't see accounts, 2FA or QuickConnect. Checklist A10
+- Owner checklist (answer each line in chat; change what's marked):
+  - **A8, VPN peers.** Network app → **Settings → VPN → VPN Server**.
+    1. Is there a WireGuard (or other) VPN server? If not, `network.md` needs a correction and A8 is done
+    2. If there is: list its peers (names only). Each should be one device you recognize and still use. **Delete** any you don't recognize or no longer use
+    3. Should the VPN stay on at all? If nobody connects from outside, turning the server off closes the WireGuard port on the WAN
+    4. **Settings → VPN → Teleport** (and UniFi Identity, if you use it): who has access? Remove anyone unexpected
+  - **A9, gateway admins.** UniFi OS console → **Admins & Users**.
+    1. List the admins and their roles. Expect: you (Super Admin, cloud account), the agent's read account (View Only), the agent's write account. Remove or demote anything else
+    2. Any local-only admin with a password login? If not used, remove it
+    3. **account.ui.com → Security**: is MFA on for your cloud account? What method (an authenticator app or passkey is better than email or SMS)? Turn it on if it's off
+  - **A10, NAS accounts.** DSM → **Control Panel → User & Group**.
+    1. Is the built-in `admin` account **disabled**? Is `guest` **disabled**? Disable whichever isn't
+    2. List the other accounts (names only) and which are in the `administrators` group. Expect your own account plus the agent's accounts (read, write, extras). Remove or disable anything else
+    3. **Control Panel → Security → Account → 2-Factor Authentication**, and **Personal → Security** on your own account: is 2FA on for your admin account? Turn it on if not. Optional: enforce it for the administrators group (check the agent's admin accounts first; they would need an exemption or they stop working)
+    4. **Control Panel → External Access → QuickConnect**: is it on? Do you use it to reach the NAS from outside? If not, **turn it off**
+- Owner's answers (chat, 2026-11-02):
+  - A8.1: one VPN server, **Teleport** (UniFi's invite-based remote-access VPN), subnet 192.168.2.0/24, up. No other server type. The WireGuard server on 192.168.3.0/24 that `network.md` listed is gone; `network.md` corrected. The read account can't see Teleport, which is why the API showed no servers
+  - A8.3: Teleport stays on. It's used on the owner's phone, laptop and tablet
+  - A9.1 (screenshot): six console users. The owner (Owner, cloud account); a second person (Viewer, cloud account, all three apps); the agent's read account (Viewer, all three apps); the agent's write account (Site Admin, Network only); the gateway-backup account (Custom, Network only); the home-automation integration (Custom, all three apps). Names in `private/changes.md`. No unexpected admin
+  - A9.2: no local-only admin with full rights; the four service accounts are scoped local accounts
+  - A9.3: MFA is on for the owner's cloud account
+  - A9 trim: the owner removed the app permissions the home-automation integration account didn't need (**changed by the owner**)
+  - A10.1 (screenshot): built-in `admin` and `guest` are both **deactivated**
+  - A10.2 (screenshot): ten local accounts. Besides the two built-ins: the owner's daily account (2FA **on**), a second owner account (2FA off), the agent's read and write accounts, the gateway-backup job and reader accounts, and two accounts used by home services. Names in `private/changes.md`. Every account but the owner's daily one has 2FA off. That's expected for service accounts, which can't do 2FA; it matters only for accounts that are admins
+  - A10.2: no service account is in the administrators group (owner)
+  - A10.3 (screenshot, correcting an earlier answer): the second owner account is **active, not an admin**. Its groups are `users` and `http` (DSM's group for the web server). So the only admin is the owner's daily account, with 2FA on. The second account has 2FA off, which is acceptable for a non-admin. Open: whether anyone uses it, and why it's in `http`; see the backlog note
+  - A10.4: QuickConnect is **off** (screenshot)
+  - A8.2: Teleport's Manage view doesn't list enrolled devices, so the peer list can't be checked from the console. The owner names three devices. Left to O7 (identity inventory), which needs a source that lists Teleport peers
+- Rollback: re-enable what was disabled in the same screens. A deleted VPN peer can't be restored; it's recreated with a new key and the device re-imported
+- Approved by / when: tier 3, the owner makes each change
+- Couldn't verify:
+  - Teleport's enrolled devices: no list in the console, and the read account can't see Teleport at all
+  - The NAS group membership of the other accounts: from the owner's answer, not screenshots; the NAS read account can't list users
+  - Which app the third permission icon in the console user list is (inferred: Network, Protect, and one more)
+
 ## 2026-11-02: Backlog O5, patch lane (vendor side)
 - Status: **applied 2026-11-02** by the owner (tier 3: the owner checks and sets the updaters in the UIs; the agent reads and records). Post-update health checks wait for O1
 - Target: the gateway console's own updates (UniFi OS and its apps), UniFi device firmware (switches, APs), DSM and its packages; the timing of the gateway backup job
