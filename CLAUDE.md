@@ -29,6 +29,7 @@ A home network (UniFi Dream Machine Pro, a Mac Pro VM host and the VMs on it) ru
 
 - `docs/spec.md`: what the system is and does, judged from the owner's side (outcomes, planes, the observer, the patch lane). Start here
 - `docs/strategy.md` + `docs/backlog.md`: what we're protecting, from what, in what order; the ordered list of work
+- `docs/detectors.html`: the observer's detector severity policy; the JSON block in it is what the observer reads (tier 3, changes by PR)
 - `docs/network.md`: VLANs, zones, inbound exposure (role names)
 - `docs/hosts/`: one page per host role
 - `docs/changes.md`: change log (proposed, approved, applied, rejected)

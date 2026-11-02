@@ -105,6 +105,8 @@ Each detector has a severity and a false-positive log. Severities:
 
 **Demotion rule.** Three false positives from one detector in a month demotes it one severity until its next review. A demotion is a line in the Sunday digest, and the fix is a PR, not a toggle in the running system.
 
+The policy the observer reads is the JSON block in [detectors.html](detectors.html), which also renders this table with the rows still under review marked. The table above is the prose copy; when they disagree, the JSON wins and this gets fixed.
+
 ## The patch lane
 
 The one place the observer acts on its own. The principle: **the vendor's own updater does the update; the observer verifies it happened, catches the lag, and checks nothing broke.** The observer never applies a gateway, NAS or OS update itself.
