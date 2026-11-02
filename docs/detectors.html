@@ -1,0 +1,234 @@
+<title>netstack Detector Policy</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: one column, a policy register. The table is the page; the JSON block below it is the source the observer reads. */
+:root {
+  color-scheme: light dark;
+  --bg: light-dark(#f7f7f4, #15181c);
+  --surface: light-dark(#ffffff, #1d2126);
+  --fg: light-dark(#1d2126, #e6e8e3);
+  --muted: light-dark(#5d6671, #9aa3ad);
+  --rule: light-dark(#d9dcd6, #2e343b);
+  --accent: light-dark(#8a5a0a, #e0b25a);          /* review flag */
+  --accent-soft: light-dark(#fbf1dc, #2a2416);
+  --page: light-dark(#b3261e, #ff8a80);            /* severity: page */
+  --page-soft: light-dark(#fbe9e7, #3a1f1d);
+  --digest: light-dark(#8a5a0a, #e0b25a);          /* severity: digest */
+  --digest-soft: light-dark(#fbf1dc, #2a2416);
+  --log: light-dark(#5d6671, #9aa3ad);             /* severity: log */
+  --log-soft: light-dark(#eceeea, #262b31);
+  --font-body: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+}
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"] { color-scheme: dark; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: clamp(14px, 3.6vw, 15px); line-height: 1.5; }
+.wrap { max-width: 1080px; margin: 0 auto; padding-block: 40px 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+header { display: grid; gap: 10px; margin-bottom: 28px; max-width: 68ch; }
+.eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+h1 { font-size: clamp(24px, 6vw, 28px); font-weight: 600; letter-spacing: -.01em; margin: 0; text-wrap: balance; }
+h2 { font-size: 17px; font-weight: 600; margin: 32px 0 10px; }
+p { margin: 0; max-width: 68ch; }
+p + p { margin-top: 8px; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 18px; margin: 18px 0 14px; font-size: 14px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 8px; }
+.sev { display: inline-block; font-family: var(--font-mono); font-size: 12px; font-weight: 500; letter-spacing: .04em; text-transform: uppercase;
+  padding: 2px 7px; border-radius: 3px; white-space: nowrap; }
+.sev.page   { color: var(--page);   background: var(--page-soft); }
+.sev.digest { color: var(--digest); background: var(--digest-soft); }
+.sev.log    { color: var(--log);    background: var(--log-soft); }
+.sev.deferred { color: var(--muted); background: transparent; border: 1px dashed var(--rule); }
+.tablewrap { overflow-x: auto; border: 1px solid var(--rule); border-radius: 4px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; min-width: 760px; }
+th, td { text-align: left; vertical-align: top; padding: clamp(10px, 2.5vw, 12px) clamp(12px, 3vw, 14px); border-top: 1px solid var(--rule); }
+thead th { border-top: 0; font-family: var(--font-mono); font-size: 12px; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); background: var(--bg); }
+td.name { font-family: var(--font-mono); font-size: 13.5px; font-weight: 500; white-space: nowrap; }
+td.fires { max-width: 46ch; }
+td.rule .cond { display: grid; gap: 6px; }
+td.rule .cond div { display: grid; grid-template-columns: auto 1fr; gap: 8px; align-items: baseline; font-size: 14px; }
+td.rule .cond .when { color: var(--muted); }
+tr.flag td { background: var(--accent-soft); }
+tr.flag td.name::before { content: "review"; display: block; font-size: 11px; letter-spacing: .08em; color: var(--accent); margin-bottom: 4px; }
+tr.flag .why { font-size: 13.5px; color: var(--fg); margin-top: 8px; border-left: 2px solid var(--accent); padding-left: 10px; }
+.demote { display: grid; gap: 6px; padding: 14px 16px; border: 1px solid var(--rule); border-radius: 4px; background: var(--surface); max-width: 68ch; }
+.demote .k { font-family: var(--font-mono); font-size: 12px; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+.meta { font-size: 13px; color: var(--muted); margin-top: 24px; max-width: 68ch; }
+.meta code, p code { font-family: var(--font-mono); font-size: 13px; }
+details { margin-top: 14px; max-width: 100%; }
+summary { cursor: pointer; font-family: var(--font-mono); font-size: 13px; color: var(--muted); }
+pre { margin: 10px 0 0; padding: 12px 14px; font-family: var(--font-mono); font-size: 12.5px; line-height: 1.45; background: var(--surface); border: 1px solid var(--rule); border-radius: 4px; overflow-x: auto; }
+a { color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">netstack · docs/detectors.html · tier 3, changes by PR</div>
+    <h1>What pages you, what waits for Sunday, what only gets logged</h1>
+    <p>The observer's detector policy from <code>docs/spec.md</code>. The table is rendered from the JSON block at the bottom of this file, which is what the observer reads. Edit the JSON, not the table.</p>
+  </header>
+
+  <div class="legend" id="legend"></div>
+
+  <div class="tablewrap">
+    <table id="policy">
+      <thead>
+        <tr><th>Detector</th><th>Fires when</th><th>Severity</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <h2>Demotion</h2>
+  <div class="demote" id="demotion"></div>
+
+  <p class="meta" id="meta"></p>
+
+  <details>
+    <summary>policy JSON (the source)</summary>
+    <pre id="src"></pre>
+  </details>
+</div>
+
+<script type="application/json" id="detector-policy">
+{
+  "version": "2026-11-02",
+  "status": "proposed",
+  "source": "docs/spec.md § Detectors",
+  "severities": {
+    "page":     "push notification now",
+    "digest":   "waits for the Sunday digest",
+    "log":      "stored and shown in the view, never pushed",
+    "deferred": "not built yet"
+  },
+  "demotion": {
+    "rule": "three false positives from one detector in one calendar month drop it one severity (page → digest → log) until its next review",
+    "visible_in": "the Sunday digest",
+    "fix_by": "a PR that changes this file; never a toggle in the running system"
+  },
+  "detectors": [
+    {
+      "id": "unapproved-change",
+      "name": "Unapproved change",
+      "fires": "A snapshot differs from the baseline and no approved changes.md entry matches the diff.",
+      "severity": [
+        { "when": "target is the gateway or the NAS", "level": "page" },
+        { "when": "any other target", "level": "digest" }
+      ],
+      "review": "Pages on every gateway diff with no matching entry, which includes renaming a device from the UniFi app on your phone. Either accept that, or add a named allowlist of fields (names, labels, icons) that drop to digest."
+    },
+    {
+      "id": "approved-change-landed",
+      "name": "Approved change landed",
+      "fires": "A diff matches an approved changes.md entry.",
+      "severity": [ { "when": "always", "level": "log" } ],
+      "effect": "marks the entry verified"
+    },
+    {
+      "id": "advisory-match",
+      "name": "Advisory match",
+      "fires": "A feed item names a product and version the inventory has, and a fix is available.",
+      "severity": [
+        { "when": "listed in CISA KEV, or vendor-rated critical", "level": "page" },
+        { "when": "otherwise", "level": "digest" }
+      ]
+    },
+    {
+      "id": "patch-lag",
+      "name": "Patch lag",
+      "fires": "A fix has been available longer than the target's window and the inventory still shows the old version.",
+      "severity": [ { "when": "always", "level": "page" } ],
+      "review": "No grace beyond the target's window and no snooze, so a release you've deliberately held back pages you daily. Either add a per-target hold (a dated line in private/ that the observer honours) or accept the noise as the cost of 'everything updates itself'."
+    },
+    {
+      "id": "patch-failed",
+      "name": "Patch failed",
+      "fires": "The vendor updater reports failure, or a post-update health check fails.",
+      "severity": [ { "when": "always", "level": "page" } ]
+    },
+    {
+      "id": "backup-stale",
+      "name": "Backup stale",
+      "fires": "The nightly gateway backup is older than the gateway's next update window, or the job's manifest is missing.",
+      "severity": [ { "when": "always", "level": "page" } ]
+    },
+    {
+      "id": "health",
+      "name": "Health",
+      "fires": "A switch or AP offline past a threshold; a container exited; gateway memory over threshold; the VPN gateway's tunnel down; a DNS resolver that DHCP hands out not answering.",
+      "severity": [
+        { "when": "first seen", "level": "digest" },
+        { "when": "persists for a day", "level": "page" }
+      ]
+    },
+    {
+      "id": "identity",
+      "name": "Identity",
+      "fires": "A new admin account; a new VPN peer; a token past its rotation age; a credential with no owner in the inventory.",
+      "severity": [ { "when": "always", "level": "page" } ]
+    },
+    {
+      "id": "new-device",
+      "name": "New device",
+      "fires": "A client the inventory hasn't seen, on a network where new devices aren't expected.",
+      "severity": [
+        { "when": "today (one flat LAN)", "level": "digest" },
+        { "when": "after Phase B, and the device is on a trusted network", "level": "page" }
+      ]
+    },
+    {
+      "id": "traffic-anomaly",
+      "name": "Traffic anomaly",
+      "fires": "IPS events, unexpected egress, DNS oddities.",
+      "severity": [ { "when": "until Phase B is done", "level": "deferred" } ],
+      "note": "On a flat LAN with Internal → Containers allow-all there is no baseline for 'unusual'."
+    }
+  ]
+}
+</script>
+
+<script>
+(function () {
+  var raw = document.getElementById('detector-policy').textContent;
+  var policy = JSON.parse(raw);
+
+  var legend = document.getElementById('legend');
+  Object.keys(policy.severities).forEach(function (k) {
+    var s = document.createElement('span');
+    s.innerHTML = '<span class="sev ' + k + '">' + k + '</span>' + policy.severities[k];
+    legend.appendChild(s);
+  });
+
+  var tbody = document.querySelector('#policy tbody');
+  policy.detectors.forEach(function (d) {
+    var tr = document.createElement('tr');
+    if (d.review) tr.className = 'flag';
+    var conds = d.severity.map(function (c) {
+      var when = c.when === 'always' ? '' : '<span class="when">' + c.when + '</span>';
+      return '<div>' + '<span class="sev ' + c.level + '">' + c.level + '</span>' + when + '</div>';
+    }).join('');
+    var extra = '';
+    if (d.effect) extra += '<div class="when" style="margin-top:6px;font-size:13px;color:var(--muted)">' + d.effect + '</div>';
+    if (d.note) extra += '<div style="margin-top:6px;font-size:13px;color:var(--muted)">' + d.note + '</div>';
+    var why = d.review ? '<div class="why">' + d.review + '</div>' : '';
+    tr.innerHTML =
+      '<td class="name">' + d.name + '</td>' +
+      '<td class="fires">' + d.fires + why + '</td>' +
+      '<td class="rule"><div class="cond">' + conds + '</div>' + extra + '</td>';
+    tbody.appendChild(tr);
+  });
+
+  var dem = document.getElementById('demotion');
+  dem.innerHTML =
+    '<div class="k">rule</div><div>' + policy.demotion.rule + '</div>' +
+    '<div class="k" style="margin-top:6px">shows up in</div><div>' + policy.demotion.visible_in + '</div>' +
+    '<div class="k" style="margin-top:6px">fixed by</div><div>' + policy.demotion.fix_by + '</div>';
+
+  document.getElementById('meta').textContent =
+    'Policy version ' + policy.version + ' (' + policy.status + '). Source: ' + policy.source +
+    '. Rows marked "review" are the two the owner was asked to argue with before O2 ships.';
+
+  document.getElementById('src').textContent = JSON.stringify(policy, null, 2);
+})();
+</script>
