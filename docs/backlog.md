@@ -96,6 +96,7 @@ Recorded 2026-11-02 so no session has to be told again. This is a home, not an e
 - Don't propose a control whose benefit depends on a segmentation step that hasn't happened (mDNS scoping before the IoT VLAN exists). Put it in the item that creates the segments.
 - Spending on a different VPN provider is acceptable to get A1 done.
 - Everything updates itself (owner, 2026-11-02). Don't propose "notify and click" for any patch target; propose the vendor's auto-updater plus a check that it ran. The observer verifies, it doesn't install.
+- Status checks never need governance (owner, 2026-11-02). A read-only check, such as a post-change read or update verification, gets scheduled and run by the agent through the read connections, with no `changes.md` entry, PR or owner step. Its result is reported, and recorded only when the next PR touches that entry.
 - Home-automation syncs and automations (calendars, HomeKit scenes) are plane 3 in [spec.md](spec.md): not this repo's concern. Their hosts and credentials are.
 
 ## Friction log
