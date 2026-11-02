@@ -1,3 +1,5 @@
 2026-10-26T18:42:59Z CLOSE
 2026-10-31T22:25:06Z OPEN  Container VLAN DHCP DNS to its own gateway (A2) | gate only | nas backup sha256:e68d3c897fb7 (15h old)
 2026-10-31T22:25:55Z CLOSE
+2026-11-02T19:04:31Z OPEN  A3: IPS on every internal network | gate only | nas backup sha256:2dc5b82344f3 (11h old)
+2026-11-02T19:14:02Z CLOSE
