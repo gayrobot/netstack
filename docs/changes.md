@@ -14,6 +14,31 @@ Template:
 - Approved by / when:
 ```
 
+## 2026-11-02: Backlog O5, patch lane (vendor side)
+- Status: **applied 2026-11-02** by the owner (tier 3: the owner checks and sets the updaters in the UIs; the agent reads and records). Post-update health checks wait for O1
+- Target: the gateway console's own updates (UniFi OS and its apps), UniFi device firmware (switches, APs), DSM and its packages; the timing of the gateway backup job
+- Why: outcome 4 in `spec.md`: every target updates itself, and the owner hears only about failures. The owner says UniFi auto-update is on; this confirms it and fills the gaps the read accounts can't see
+- Read (2026-11-02):
+  - UniFi device firmware: **auto-upgrade on, at 03:00 site time** (`unifi_get_mgmt_settings`). All 13 adopted devices report `upgradable: false`, so nothing is waiting. The gateway is on 5.1.34, Network 10.6.109
+  - UniFi OS and Network application auto-update: **not visible** through the Network API. Owner checklist item 1
+  - Gateway auto-backup settings: the read account gets an error (`RequestError`). The restore point the A3 window used was made around 02:00 local, so the NAS job appears to run before the 03:00 device window (inferred from one sample, not from the job's schedule)
+  - NAS: DSM 7.4.1-90080, uptime 49 days. The NAS read connection has no tool for DSM's or Package Center's update settings. Owner checklist items 2 and 3
+- Owner checklist (read and set; each line answered in chat):
+  1. Gateway console: **Control Plane → Updates.** Is auto-update on for UniFi OS, and for the applications (Network)? At what time? If it's off, turn it on, with the time after the backup job (03:00 or later)
+  2. DSM: **Control Panel → Update & Restore → DSM Update → Update Settings.** Which option is selected (important updates only, or all) and on what schedule? Recommended: install important updates automatically, after 03:00
+  3. DSM: **Package Center → Settings → Auto-update.** Is it on, for all packages or selected ones?
+  4. DSM: **Control Panel → Task Scheduler**, the gateway backup task. What time does it run? It should finish before the earliest update time from items 1 and 2
+- Owner's answers (chat, 2026-11-02):
+  1. Gateway console: auto-update on, daily at 03:00 (already set)
+  2. DSM: now auto-updates daily at 04:00 (**changed by the owner**). One update is pending and should install overnight, 2026-11-03 at 04:00
+  3. Package Center: auto-update now on for all packages (**changed by the owner**). It has no schedule; packages update when a release appears
+  4. The gateway backup job runs daily at 01:30
+- Resulting order each night: backup 01:30 → gateway OS, apps and device firmware 03:00 → DSM 04:00. The restore point is 90 minutes old when the gateway updates. Package updates happen whenever a release appears; they aren't tied to the backup
+- Flagged for observability (owner, 2026-11-02): the first DSM auto-update tonight. A read-only check on the morning of 2026-11-03 confirms the DSM version moved past 7.4.1-90080, the NAS rebooted and is healthy, and NFS is running. Scheduled as a one-off local task at 06:30, using the NAS read connection only. From then on this is the patch-lag and post-update health detectors' job (O3, O4)
+- Rollback: set DSM's update setting and Package Center's auto-update back to their earlier values in the same screens
+- Not in this entry: the post-update health checks. They are observer work and wait for O1
+- Approved by / when: owner, in chat, 2026-11-02 (the owner made the changes in the UIs)
+
 ## 2026-11-02: Backlog A3, IPS on every internal network
 - Status: **applied 2026-11-02**, verified; the 1-hour and 24-hour memory reads are still open (see Applied below)
 - Target: gateway, site-wide threat management (IDS/IPS), the list of protected networks
