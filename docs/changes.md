@@ -14,6 +14,21 @@ Template:
 - Approved by / when:
 ```
 
+## 2026-11-02: Backlog A5 (travel router) and A7 (unused switch ports)
+- Status: **rejected** by the owner, in chat
+- Target: access switches (A7); a router wired into a switch port (A5)
+- Why proposed: the 2026-10-21 audit flagged both; the backlog listed them as quick wins
+- Why rejected: A7: physical access inside the house is trusted and out of scope. A5: the travel routers are the owner's arcade-game gateways (more exist, offline), not rogue devices
+- Diff: none made
+- Approved by / when: rejected by the owner, 2026-11-02
+
+## 2026-11-02: Backlog A4 (mDNS reflection scope)
+- Status: **deferred** by the owner, in chat; folded into B2
+- Target: site-wide mDNS setting
+- Why deferred: scoping reflection has no effect until IoT is on its own VLAN, so it belongs with creating those networks
+- Diff: none made
+- Approved by / when: owner's call, 2026-11-02
+
 ## 2026-10-31: Narrow one denylist term so the history scan passes
 - Status: **applied by the owner 2026-10-31** (tier 3: this is one of the project's own controls), in `private/denylist.txt` and the `DENYLIST` secret
 - Target: one line of the denylist. The pattern itself stays private
