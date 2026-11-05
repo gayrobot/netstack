@@ -14,6 +14,15 @@ Template:
 - Approved by / when:
 ```
 
+## 2026-11-05: Backlog A12 (HomeClaw vetting; accessory allowlist)
+- Status: **not applied; risk accepted by the owner 2026-11-05** (strategy.md R2). The app's settings screen is buggy and doesn't let the owner change the filter, so the allowlist can't be set. Tier 3 (agent access controls) stays the owner's. The vetting is written
+- Target: the HomeClaw app's accessory filter (Settings, Devices) on the host that runs it
+- Why: the vetting ([homeclaw.md](vetting/homeclaw.md)) found the filter is `all`, so every accessory is visible to the agent, locks and cameras included. One approved prompt can unlock a door. The plugin has no gate of its own
+- Diff: filter mode `all` to `allowlist`, selecting everything except locks, garage, alarm and cameras. The webhook stays off. The exact list goes in `private/`
+- Rollback: set the filter back to `all`
+- Verify: the agent reads `homekit_config` and `homekit_accessories` list through the plugin and confirms no lock, garage, alarm or camera appears
+- Approved by / when: not applied. Owner accepted the risk in chat, 2026-11-05 (R2, review by 2027-01-29)
+
 ## 2026-11-05: Backlog A11 (NAS share clean-up)
 - Status: **closed 2026-11-05, done by the owner in DSM** (no agent write, no change window). Outcome: the one empty share was deleted by the owner and the agent's read connection confirmed it gone (13 shares remain); the world-writable finding wasn't reproduced; no stale NFS rule remains; DSM offers no uninstall for the three unused packages (button greyed out or missing, no error), so they stay. Earlier drafts below are kept as the record
 - Target: the NAS's shared folders, its NFS rules and its installed packages
