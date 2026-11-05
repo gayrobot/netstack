@@ -173,7 +173,7 @@ a { color: inherit; }
       "name": "New device",
       "fires": "A client the inventory hasn't seen, on a network where new devices aren't expected.",
       "severity": [
-        { "when": "today (one flat LAN)", "level": "digest" },
+        { "when": "today (before segmentation)", "level": "digest" },
         { "when": "after Phase B, and the device is on a trusted network", "level": "page" }
       ]
     },
@@ -182,7 +182,7 @@ a { color: inherit; }
       "name": "Traffic anomaly",
       "fires": "IPS events, unexpected egress, DNS oddities.",
       "severity": [ { "when": "until Phase B is done", "level": "deferred" } ],
-      "note": "On a flat LAN with Internal → Containers allow-all there is no baseline for 'unusual'."
+      "note": "Until Phase B segments the network there is no baseline for 'unusual'."
     }
   ]
 }

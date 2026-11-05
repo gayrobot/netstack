@@ -1,7 +1,7 @@
 # Vetting: HomeClaw (HomeKit MCP plugin)
 
 **Reviewed:** 2026-11-05, read-only, using the [checklist](README.md). Backlog A12.
-**Verdict:** **OK with conditions.** The plugin itself is a thin, readable socket client with no network, shell or file access of its own. The risk is the authority it hands over: with no filter set, the agent can unlock doors, create automations that fire unattended, and point an event feed at any URL. Nothing in the plugin gates those calls. The conditions below put the gate where it can hold.
+**Verdict:** **OK with conditions.** The plugin itself is a thin, readable socket client with no network, shell or file access of its own. The risk is the authority it hands over: with no filter narrowing it, the agent can control any accessory, create automations that fire unattended, and point an event feed at any URL. Nothing in the plugin gates those calls. The conditions below put the gate where it can hold.
 
 This one was installed on 2026-10-18, before any review, so this review is retroactive. Home-automation syncs and automations are plane 3 ([spec.md](../spec.md)), not this repo's concern. What's reviewed here is the agent's access to them.
 
@@ -39,7 +39,7 @@ The server exposes ten tools. From the code and schemas, not the docs:
 | Tool | Read | Create / update | Delete |
 |---|---|---|---|
 | `homekit_status`, `_rooms`, `_device_map`, `_events` | yes | | |
-| `homekit_accessories` | list, get, search | **`control`: set any characteristic, including lock target state (unlock), garage, alarm, thermostat** | |
+| `homekit_accessories` | list, get, search | **`control`: set any characteristic on any accessory** | |
 | `homekit_scenes` | list, get | `trigger` (runs a scene) | |
 | `homekit_automations` | list, get | `create`, `create_time`, `add_condition`, `enable`, `disable`: automations that **fire unattended**, on any sensor, button or time | `delete` |
 | `homekit_manage` | list_groups | rename, assign rooms, create or rename rooms, zones, groups | `remove_accessory`, `remove_room`, `remove_zone`, `delete_group` |
@@ -47,16 +47,16 @@ The server exposes ten tools. From the code and schemas, not the docs:
 | `homekit_webhook` | status, test | **`setup`: URL and bearer token; the app then pushes HomeKit events to that URL** | |
 
 - **How its own controls are enforced:** the plugin enforces nothing. There is no call-time permission check, no read-only mode, no confirmation field, and no tool-level deny. Many `homekit_manage` and automation calls accept `dry_run`, but that is a flag the model passes, not a human check. The **only** gate is the Claude client's own per-tool prompt. No allow or deny rule for these tools is set in the user settings, so each call prompts today.
-- **The accessory filter is the one control with teeth, and it is off.** The app's `allowlist` mode hides accessories from the plugin entirely. Live read 2026-11-05 through the tool: filter mode is **`all`**, and every accessory the home has is visible to the agent, locks and cameras included. A stored allowlist exists but isn't applied. The agent can also change this setting itself (`homekit_config set`), so the filter only holds if the client prompt on that call does.
+- **The accessory filter is the one control with teeth, and it is off.** The app's `allowlist` mode hides accessories from the plugin entirely. Live read 2026-11-05 through the tool: the filter is not narrowing what the agent can see. A stored allowlist exists but isn't applied. The agent can also change this setting itself (`homekit_config set`), so the filter only holds if the client prompt on that call does.
 - **Confirmation:** the prompt in the client is a human. Nothing in the plugin adds to it.
 - **The account it runs as:** the HomeKit access of the Apple account signed in on the host the app runs on. HomeKit has no lower role for the app: it acts as the home's owner or an admin member.
-- **Webhook:** disabled and unconfigured today (live read 2026-11-05: no URL, 0 delivered). Turning it on lets an agent, or anything that steers one, send the house's event stream, including door and motion events, to any URL. The README's own setup prompt points it at a local gateway only.
+- **Webhook:** disabled and unconfigured today (live read 2026-11-05: no URL, 0 delivered). Turning it on lets an agent, or anything that steers one, send the house's event stream, to any URL. The README's own setup prompt points it at a local gateway only.
 
 ## Verdict
 
 **OK with conditions.** The code that loads into the agent is small and clean, and its source and install are consistent. It is acceptable only while these hold:
 
-1. **(Not met; risk accepted by the owner 2026-11-05, strategy.md R2.)** The app's settings screen doesn't let the owner change the filter, so it stays on `all`. **Set the filter to `allowlist` and leave out every lock, garage, alarm and camera.** The owner does this in the HomeClaw app (Settings, Devices), tier 3. Until it's done, the agent can unlock a door with one approved prompt. The agent doesn't change this setting.
+1. **(Not met; risk accepted by the owner 2026-11-05, strategy.md R2.)** The app's settings screen doesn't let the owner change the filter, so it stays on `all`. **Set the filter to `allowlist` and leave out the security-sensitive accessories.** The owner does this in the HomeClaw app (Settings, Devices), tier 3. Until it's done, the agent's authority is bounded only by the client prompt. The agent doesn't change this setting.
 2. **Gate the risky tools in the client.** Keep a prompt on `homekit_accessories` (control), `homekit_manage`, `homekit_automations`, `homekit_config` and `homekit_webhook`. Never allow-list them. Reads (`status`, `rooms`, `device_map`, `events`, and the list, get and search actions) may run without a prompt. Because the client's rules are per tool, not per action, the combined tools mean this is all or nothing; if reads need to be free, a deny on the writes isn't possible without losing control. The owner chooses.
 3. **Keep the webhook off.** Enabling it is a new change with a `changes.md` entry, and the URL is a loopback or LAN host the owner names.
 4. **Don't auto-update.** Re-vet on any change to the plugin commit; the app updates itself through the App Store and a new app version is a new review of the socket commands. See [README.md](README.md) rule 3.
@@ -74,8 +74,8 @@ The server exposes ten tools. From the code and schemas, not the docs:
 
 - Anything about the published artifact's origin: the plugin has no attestation, so provenance rests on the git commit and the author's repository.
 - Whether the App Store binary matches the source in the repo.
-- Which accessories are locks, cameras or garage, since the exact inventory stays in `private/`. The allowlist condition needs that list.
+- Which accessories are security-sensitive, since the exact inventory stays in `private/`. The allowlist condition needs that list.
 
 ## Addendum 2026-11-05 (owner)
 
-The owner reports that Apple's Home asks for authentication on the phone when an automation touches a lock. If so, the unattended-automation risk for locks is limited to what the owner confirms. A direct `homekit_accessories control` call is the remaining path, and it is gated only by the client prompt. Reported by the owner; not tested by the agent. The owner has no garage door or alarm in HomeKit (2026-11-05), so locks are the only security accessory in scope.
+The owner reports that Apple's Home asks for confirmation on the phone before some automations take effect. If so, the unattended-automation risk is limited to what the owner confirms. A direct `homekit_accessories control` call is the remaining path, and it is gated only by the client prompt. Reported by the owner; not tested by the agent.

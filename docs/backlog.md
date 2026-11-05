@@ -8,7 +8,7 @@ Columns: **Threat** is from the strategy's threat table. **Tier** is from [chang
 
 | ID | Item | Threat | Tier | Effort | Status |
 |---|---|---|---|---|---|
-| A1 | **Move the NAS's peer-to-peer download client behind the VPN gateway container, then close the two internet-facing port forwards.** Check done 2026-10-31: the forwards are that client's inbound peer port. Checks still open: the VPN provider offers port forwarding; the forwards map to the peer port only. Then: a client container in the app VM sharing the VPN gateway's network namespace, the download share mounted over NFS, the provider's forwarded port set in both, the kill switch verified, tasks moved over, the NAS client's peer-to-peer module off, both forwards disabled, verified from outside | T2 | 2 / owner | L | open; risk R1 accepted 2026-10-31 until this lands. 2026-11-02: the current VPN provider has no port forwarding, so the owner will switch providers (possibly refunding the current one while the window is open); the owner chose a new provider on 2026-11-02 (name in `private/`) and the change is proposed in `changes.md` as two parts: the provider swap plus a second gateway and client pair for the private-tracker downloads, then closing the two forwards. **Part 1 applied 2026-11-05** (owner approved after the refund and the new account): the existing gateway runs on the new provider and a second gateway and client pair is up, both healthy with their forwarded ports set in the clients. **Part 2 applied 2026-11-05:** the owner had both forwards disabled now and deferred moving the download tasks to E1, so R1 is ended and the NAS client's inbound peers are lost until E1. **Read 2026-11-05 (read connection):** both forwards are disabled and the gateway has no NAT rules, so nothing else forwards those ports. Still open: an outside probe of the two ports (needs a machine outside the network), the NAS client's peer listener state (the read account can't see it), and the new gateways' kill-switch test (needs a shell on the VM). Evidence 2026-11-02: IPS blocked six high-severity attempts from one outside address to the NAS through these forwards in a day Tried and rolled back 2026-10-28 because the check was skipped |
+| A1 | **Close the NAS's inbound internet exposure.** Both forwards were disabled 2026-11-05 and the read connection confirms nothing else forwards those ports. Tried and rolled back 2026-10-28 because a check was skipped. The service they served now has a second home in the app VM (part 1, applied 2026-11-05); moving its remaining tasks is E1. Still open: an outside probe of the ports, the NAS-side listener state (the read account can't see it), and the new gateways' kill-switch test (needs a shell on the VM). Specifics are in `private/` and `changes.md` | T2 | 2 / owner | L | part 1 and part 2 applied 2026-11-05; risk R1 ended |
 | A2 | Fix DNS on the container VLAN: DHCP hands out resolvers the Containers zone can't reach | T1 | 2 | S | done 2026-10-31: the VLAN's DHCP DNS now points at its own gateway, verified through the read connection (see `changes.md`). Nothing answered at the old resolvers. Stopgap until B4 |
 | A3 | Turn threat management (IPS) on for every network, not just the main LAN; watch gateway memory afterwards | T1 | 2 / owner | S | done 2026-11-02: all three internal networks protected, verified through the read connection. The UI dropped one legacy category (accepted). Memory reads at 1 h and 24 h still open (see `changes.md`) |
 | A4 | ~~Set mDNS reflection to the services that need it~~ Folded into B2: scoping reflection means nothing while everything is still on one VLAN, so decide it when the IoT, camera and guest networks exist | T1 | – | – | moved to B2 2026-11-02 (owner's call) |
@@ -17,9 +17,9 @@ Columns: **Threat** is from the strategy's threat table. **Tier** is from [chang
 | A7 | ~~Disable unused switch ports~~ | T1 | – | – | won't do 2026-11-02 (owner's call): physical access to the house is out of scope (see strategy's out-of-scope list). Revisit only if an untrusted person gets physical access, such as a rental room or a business use |
 | A8 | Review VPN peers: one per device, delete unknown ones | T6 | owner | S | **done 2026-11-02.** The only server is Teleport (owner's phone, laptop, tablet); the old WireGuard server is gone. Teleport doesn't list enrolled devices, so the peer review moves to O7 |
 | A9 | Review gateway admin accounts; MFA on the cloud account | T6 | owner | S | **done 2026-11-02.** Six console users, all known; MFA on the owner's cloud account; the home-automation account trimmed |
-| A10 | NAS: disable the default `admin` and `guest` accounts; 2FA on the owner's account; disable QuickConnect if unused | T2, T6 | owner | S | **done 2026-11-02.** `admin` and `guest` deactivated; the one admin is the owner's daily account, with 2FA; no other account is an admin; QuickConnect off. Leftover: a second owner account is active, non-admin, in the web-server group `http`. Deactivate it if unused, or take it out of `http` |
-| A11 | NAS share clean-up: the world-writable share, the empty shares, the stale NFS rule, the unused packages | T2, T4 | 2 / owner | S | done 2026-11-05, by the owner in DSM. Empty share deleted and confirmed through the read connection; the world-writable finding wasn't reproduced (the user-home share has no broad write); no stale NFS rule left; the three unused packages can't be uninstalled in DSM, so they stay. Left for the owner (tier 3): narrow the write account's Read/Write from every folder and home to what a change needs |
-| A12 | Vet the home-automation plugin (HomeClaw) that's already installed. It can act on locks and cameras | T5 | 3 | M | vetted 2026-11-05: OK with conditions, see [vetting/homeclaw.md](vetting/homeclaw.md). The allowlist couldn't be set (the app's settings screen is buggy), so the owner accepted the risk 2026-11-05: strategy.md R2, review by 2027-01-29. Keep the webhook off |
+| A10 | NAS: disable the default `admin` and `guest` accounts; 2FA on the owner's account; disable QuickConnect if unused | T2, T6 | owner | S | **done 2026-11-02.** `admin` and `guest` deactivated; the one admin is the owner's daily account, with 2FA; no other account is an admin; QuickConnect off. Leftover: one account to review (details in `private/`) |
+| A11 | NAS share clean-up: share and package clean-up (specifics in `private/`) | T2, T4 | 2 / owner | S | done 2026-11-05, by the owner in DSM and confirmed through the read connection. Left for the owner (tier 3): narrow the write account's access to what a change needs |
+| A12 | Vet the home-automation plugin (HomeClaw) that's already installed. It can act on home-automation devices | T5 | 3 | M | vetted 2026-11-05: OK with conditions, see [vetting/homeclaw.md](vetting/homeclaw.md). The filter couldn't be narrowed, so the owner accepted the risk 2026-11-05: strategy.md R2, review by 2027-01-29. Keep the webhook off |
 
 ## Phase B: segmentation
 
@@ -33,7 +33,7 @@ Columns: **Threat** is from the strategy's threat table. **Tier** is from [chang
 | B6 | A trusted Wi-Fi network for phones, laptops and watches: WPA3 only, management-frame protection required | T1, T6 | 2 | M | open |
 | B7 | ~~The home-automation VM gets a second NIC on the IoT VLAN~~ | T1 | – | – | not needed 2026-11-05: Internal → IoT is allowed and the firewall is stateful, so home automation reaches the IoT networks from where it is ([segmentation.md](segmentation.md)). Reopen only if an integration needs layer-2 discovery the mDNS proxy can't carry |
 | B8 | Move smart devices by MAC (Virtual Network Override), no SSID change: a pilot of one plug and one vacuum, then IoT-Cloud, then IoT-Local, the lighting bridge last; update home-automation integrations pinned to an IP. Rollout steps 2–5 in [segmentation.md](segmentation.md) | T1 | 2 | L | open; after B2. The override has no MCP tool, so the owner sets it from the agent's checklist and the agent verifies each move |
-| B9 | Internal → Containers: replace allow-all with one allow per service that a trusted device needs | T1 | 2 | M | open |
+| B9 | Internal → Containers: replace the broad allow with one allow per service that a trusted device needs | T1 | 2 | M | open |
 | B10 | Tighten: shrink the main LAN DHCP pool; DNS enforcement on IoT; optional: servers to the server VLAN (its own plan, since it re-IPs NFS and the container policies) | T1 | 2 | L | open |
 
 ## Phase C: servers
@@ -41,13 +41,13 @@ Columns: **Threat** is from the strategy's threat table. **Tier** is from [chang
 | ID | Item | Threat | Tier | Effort | Status |
 |---|---|---|---|---|---|
 | C1 | NAS firewall: DSM, SMB and NFS from trusted and VPN only; auto-block on | T2 | owner | M | open |
-| C2 | NAS data protection: scheduled snapshots of the data shares, a quarterly scrub, an off-site backup; then a test restore of one share | T4 | owner | L | open; today one bad delete has no undo |
-| C3 | App VM: disable rpcbind (listening on all interfaces, not needed for NFSv4) | T1 | 1 | S | proposed 2026-10-26, pending. **Parked by the owner 2026-11-05;** do it the next time the owner is logged in to the VM. The two commands are in `changes.md` |
-| C4 | NFS export restricted to the app VM, root squashed (`sec=sys` trusts client-asserted UIDs) | T1, T3 | 2 | S | open |
-| C5 | App VM inventory account: a read-only Docker API proxy and a user with neither `docker` nor `sudo`, replacing the current root-equivalent account | T5 | 3 | M | open |
+| C2 | NAS data protection: scheduled snapshots of the data shares, a quarterly scrub, an off-site backup; then a test restore of one share | T4 | owner | L | open |
+| C3 | App VM: turn off a service it doesn't need | T1 | 1 | S | proposed 2026-10-26, pending. **Parked by the owner 2026-11-05;** do it the next time the owner is logged in to the VM. The two commands are in `changes.md` |
+| C4 | NFS export tightened to the app VM | T1, T3 | 2 | S | open |
+| C5 | App VM inventory account: a read-only Docker API proxy and a user with neither `docker` nor `sudo`, replacing the current inventory account | T5 | 3 | M | open |
 | C6 | Containers: pin images by digest; bring the exited monitoring container back; fix or drop the allow rule that points at its unassigned IP | T3 | 2 / owner | M | open |
-| C7 | The app VM's management NIC has a global IPv6 address: confirm inbound v6 is blocked (it is by the default rule) and decide whether servers need SLAAC at all | T2 | 2 | S | open |
-| C8 | Synology MCP: run from the hash lock, fixed working directory, TLS verification on (an admin password is sent with verification off) | T5, T6 | 3 | S | proposed 2026-10-26, pending |
+| C7 | Confirm inbound IPv6 is blocked for the servers and decide whether they need SLAAC at all | T2 | 2 | S | open |
+| C8 | Synology MCP: run from the hash lock, fixed working directory, TLS verification on | T5, T6 | 3 | S | proposed 2026-10-26, pending |
 | C9 | UniFi MCP: run from the hash-locked environment instead of re-resolving on every start | T5 | 3 | S | proposed 2026-10-26, pending |
 
 ## Phase O: observer (alongside A and B)
@@ -65,7 +65,7 @@ The watching layer from [spec.md](spec.md). It doesn't depend on segmentation, s
 | O7 | Identity inventory and detector: every account, token, VPN peer and agent credential with an owner and an age; pages on a new admin, a new peer or an aged token | T6 | 0 | M | open; folds in the review half of A8 and A9 once they're done by hand |
 | O8 | Interpreter: Claude drafts the Sunday digest and the proposals from the store's records, with a budget; the system is complete without it | T5 | 3 | M | open; after O2–O4 produce records worth explaining |
 | O9 | Host pages regenerated from the store; the hand-written `docs/hosts/` retired | – | 0 | S | open (outcome 5) |
-| O10 | Traffic-anomaly detector (IPS events, egress, DNS) | T1 | 0 | M | **after Phase B**; no baseline on a flat LAN |
+| O10 | Traffic-anomaly detector (IPS events, egress, DNS) | T1 | 0 | M | **after Phase B**; no baseline until the network is segmented |
 
 ## Phase D: sustain
 
@@ -82,7 +82,7 @@ Owner's order, 2026-11-05: last in the backlog; start only when A–D are done.
 
 | ID | Item | Threat | Tier | Effort | Status |
 |---|---|---|---|---|---|
-| E1 | Move the NAS download client's tasks to the second client pair (built in A1 part 1): add them with a hash-recheck against the existing files, confirm seeding, then turn the NAS client's peer-to-peer module off. The forwards are already closed (A1 part 2) | T2 | owner | M | open; deferred by the owner 2026-11-05 |
+| E1 | Move the NAS service's remaining tasks to the containers built in A1 part 1, then turn the NAS-side module off. The exposure is already closed (A1 part 2) | T2 | owner | M | open; deferred by the owner 2026-11-05 |
 
 ## Parking lot: governance ideas with no backlog item yet
 

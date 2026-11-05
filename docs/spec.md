@@ -30,8 +30,8 @@ The system is working when all of these are true. They are the acceptance test f
 | Plane | What's in it | netstack's concern |
 |---|---|---|
 | **1. Infrastructure** | Gateway, switches, APs, the VM host and its VMs, the NAS, the container VLAN, backups, the accounts and tokens that touch any of these | **All of it.** This is the system |
-| **2. Platform services** | Home-automation OS, HomeKit bridges, the plugin that acts on locks and cameras, calendar integrations, the download clients | **As workloads and identities only.** Their hosts get inventoried, patched and segmented; their credentials and agents go in the identity inventory; the plugins get vetted |
-| **3. Automations** | What those services do: sync a calendar, lock a door at ten | **None.** Governed by the service's own permission model. A future agent that acts on the house is a separate project and a client of this one |
+| **2. Platform services** | Home-automation OS, HomeKit bridges, the home-automation plugin, calendar integrations, other services | **As workloads and identities only.** Their hosts get inventoried, patched and segmented; their credentials and agents go in the identity inventory; the plugins get vetted |
+| **3. Automations** | What those services do: sync a calendar, run a schedule | **None.** Governed by the service's own permission model. A future agent that acts on the house is a separate project and a client of this one |
 
 The identity inventory (plane 1, threat T6) deliberately reaches into plane 2: every service account, API token, VPN peer and agent credential in the house is listed, with an owner and an age, whatever it's for.
 
@@ -101,7 +101,7 @@ Each detector has a severity and a false-positive log. Severities:
 | Health | A switch or AP offline past a threshold; a container exited; gateway memory over threshold; the VPN gateway's tunnel down; a DNS resolver the DHCP scopes hand out not answering | digest, page after it persists for a day |
 | Identity | A new admin account; a new VPN peer; a token past its rotation age; a credential with no owner in the inventory | page |
 | New device | A client the inventory hasn't seen, on a network where new devices aren't expected | digest; page once the IoT and guest networks exist and the device is on a trusted one |
-| Traffic anomaly | IPS events, unexpected egress, DNS oddities | **deferred until Phase B.** On a flat LAN with Internal → Containers allow-all there's no baseline for "unusual" |
+| Traffic anomaly | IPS events, unexpected egress, DNS oddities | **deferred until Phase B.** Until Phase B segments the network there's no baseline for "unusual" |
 
 **Demotion rule.** Three false positives from one detector in a month demotes it one severity until its next review. A demotion is a line in the Sunday digest, and the fix is a PR, not a toggle in the running system.
 

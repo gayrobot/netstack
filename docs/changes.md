@@ -31,20 +31,20 @@ Template:
 ## 2026-11-05: Backlog A12 (HomeClaw vetting; accessory allowlist)
 - Status: **not applied; risk accepted by the owner 2026-11-05** (strategy.md R2). The app's settings screen is buggy and doesn't let the owner change the filter, so the allowlist can't be set. Tier 3 (agent access controls) stays the owner's. The vetting is written
 - Target: the HomeClaw app's accessory filter (Settings, Devices) on the host that runs it
-- Why: the vetting ([homeclaw.md](vetting/homeclaw.md)) found the filter is `all`, so every accessory is visible to the agent, locks and cameras included. One approved prompt can unlock a door. The plugin has no gate of its own
-- Diff: filter mode `all` to `allowlist`, selecting everything except locks, garage, alarm and cameras. The webhook stays off. The exact list goes in `private/`
+- Why: the vetting ([homeclaw.md](vetting/homeclaw.md)) found the filter doesn't narrow what the agent can see. One approved prompt can act on any accessory. The plugin has no gate of its own
+- Diff: filter mode `all` to `allowlist`, leaving out the security-sensitive accessories. The webhook stays off. The exact list goes in `private/`
 - Rollback: set the filter back to `all`
-- Verify: the agent reads `homekit_config` and `homekit_accessories` list through the plugin and confirms no lock, garage, alarm or camera appears
+- Verify: the agent reads `homekit_config` and `homekit_accessories` list through the plugin and confirms none of the excluded accessories appears
 - Approved by / when: not applied. Owner accepted the risk in chat, 2026-11-05 (R2, review by 2027-01-29)
 
 ## 2026-11-05: Backlog A11 (NAS share clean-up)
-- Status: **closed 2026-11-05, done by the owner in DSM** (no agent write, no change window). Outcome: the one empty share was deleted by the owner and the agent's read connection confirmed it gone (13 shares remain); the world-writable finding wasn't reproduced; no stale NFS rule remains; DSM offers no uninstall for the three unused packages (button greyed out or missing, no error), so they stay. Earlier drafts below are kept as the record
+- Status: **closed 2026-11-05, done by the owner in DSM** (no agent write, no change window). Outcome: the one empty share was deleted by the owner and the agent's read connection confirmed it gone (13 shares remain); the audit's permissions finding wasn't reproduced; no stale NFS rule remains; DSM offers no uninstall for the three unused packages (button greyed out or missing, no error), so they stay. Earlier drafts below are kept as the record
 - Target: the NAS's shared folders, its NFS rules and its installed packages
-- Why: T2 and T4 in `strategy.md`. The 2026-10-21 audit found one world-writable share, some empty shares, a stale NFS rule and unused packages. The audit's specifics aren't in the repo, so this entry starts by re-reading them
-- Read so far (2026-11-05, read connection): 15 shared folders listed, each with a path, a writable flag and times. Share permissions, NFS rules and the package list all return **code 105 (no permission)**, because the read account isn't an admin. The agent can't see which share is world-writable, which are empty or which rule is stale
+- Why: T2 and T4 in `strategy.md`. The 2026-10-21 audit found a share-permissions item, some empty shares, a stale NFS rule and unused packages. The audit's specifics aren't in the repo, so this entry starts by re-reading them
+- Read so far (2026-11-05, read connection): 15 shared folders listed, each with a path, a writable flag and times. Share permissions, NFS rules and the package list all return **code 105 (no permission)**, because the read account isn't an admin. The agent can't see which share the permissions finding refers to, which are empty or which rule is stale
 - Owner's answers and agent reads (chat, 2026-11-05):
-  - **Share permissions (owner's screenshots).** Every folder has the same four entries: the agent's read account (Read), the agent's write account (Read & Write), the owner's account (Read & Write) and the `administrators` group (Read & Write). The two gateway-backup folders differ: the write account is **denied**, the backup job has Read, `administrators` has Read & Write. **No "everyone", guest or users-group entry on what was shown**, so the world-writable share isn't a share permission on those folders
-  - **Possible world-writable item (agent read, `list_directory /homes`):** the read account's own home folder is mode 777. That is a filesystem mode, not a share entry, and the likeliest match for the audit's finding. Unconfirmed; the audit's text isn't in the repo
+  - **Share permissions (owner's screenshots).** No broad (everyone, guest or users-group) entry on what was shown, so the audit's finding isn't a share permission on those folders. The gateway-backup folders are deliberately restricted from the write account
+  - **Possible filesystem-mode item (agent read):** a home folder's mode looked broad. That is a filesystem mode, not a share entry. Unconfirmed; the audit's text isn't in the repo
   - **Empty shares (agent read):** two shares list no files. A third empty one is gone: the owner deleted it on 2026-11-05 (the owner's own action, outside this entry; it was not read before it was deleted)
   - **NFS:** only the share the app VM mounts has a rule: the app VM, read/write, root mapped to guest. That's in use, so it stays. No stale rule is left to remove (C4 narrows this one later)
   - **Packages the owner doesn't use:** DSM Agent, SAN Manager, Synology AI Console. The read account can't list iSCSI LUNs or targets (code 105), so the owner confirms SAN Manager has none before it's removed
@@ -54,7 +54,7 @@ Template:
   3. **Owner decides** whether the per-folder entry for the owner's account is dropped (it is only redundant if that account is in `administrators`; the read account can't show membership). The two agent accounts' entries are a different question: see "Not through this change" below
   4. **Restore point:** `change-window.sh open` checks for a fresh one. Nothing here deletes data
 - Diff (draft, filled in after the checks):
-  - World-writable item: **no change needed** (owner's screenshot of the user-home share's permissions, 2026-11-05). The guest account, the backup accounts and the service accounts have No Access; the read account is Read Only; write is held only by the owner, the write account, the built-in administrator account (deactivated in A10) and one system account. There is no "everyone" or users-group entry. The 777 mode is a display artifact of the access list. The audit's world-writable finding is not reproduced on any share or home folder, so close it as not found. Left for tier 3: the write account's Read/Write on every user's home
+  - Permissions finding: **no change needed** (owner's screenshot, 2026-11-05). No broad entry exists; the access list is as intended and the odd mode is a display artifact. Not reproduced on any share or home folder, so closed as not found. Left for tier 3: narrow the write account's access
   - Empty shares: one of the two is the DSM user-home share, which isn't in the Shared Folder list and can't be removed; drop it from the change. Remove the other one only after the owner says nothing mounts it (the app VM mounts only the share with the NFS rule; SMB clients are unknown)
   - Unused packages: the owner tried to uninstall DSM Agent, SAN Manager and Synology AI Console on 2026-11-05 and DSM refused (reason not yet recorded). Open: the exact message. Until then these stay
   - Stale NFS rule: none left; dropped from this change
@@ -161,7 +161,7 @@ Template:
   6. Memory 74.4% and load 3.83, ten minutes after (73.4% and 3.71 before). No IPS events involving the container or server VLANs yet
   7. `change-window.sh close` (19:14Z)
 - Still open: memory and IPS events read after 1 hour and after 24 hours; roll back if memory stays above 90% or an IPS block hits the VPN gateway container
-- Found on the way: the IPS event log shows six high-severity blocks in the last day, all from one outside address to the NAS through the peer-port forwards (risk R1). Noted on A1
+- Found on the way: the IPS event log shows repeated high-severity blocks in the last day, from one outside address to the NAS through the forwards (risk R1). Noted on A1
 - Approved by / when: owner, in chat, 2026-11-02 ("Run change window"); deviation accepted in chat ("accept ICMP")
 
 ## 2026-11-02: Daily scope check in the harness
@@ -183,24 +183,24 @@ Template:
 - Rollback: revert the PR
 - Approved by / when: pending
 
-## 2026-11-02: Backlog A1, part 2 (close the two NAS peer-port forwards)
+## 2026-11-02: Backlog A1, part 2 (close the two NAS inbound forwards)
 - Status: **applied and verified 2026-11-05** (tier 2), revised by the owner: close the forwards now, move the download tasks later (new last backlog item E1)
-- Target: gateway, the two WAN port forwards to the NAS (TCP+UDP, any source); the NAS download client's peer listener
-- Why: risk R1. The forwards expose the NAS download client's inbound peer port to the internet. Once its download tasks run in the new client container behind the VPN gateway (part 1), nothing needs the forwards
-- Preconditions (revised 2026-11-05): part 1 applied and verified (done). The owner chose option 3 over routing the NAS client through a gateway tunnel: the NAS client stays where it is, and the task move waits for E1. Accepted consequence: until E1, the NAS client's peer-to-peer tasks lose inbound peers (slower or stalled), and the client's own peer listener may still be on but is unreachable from outside
+- Target: gateway, the two WAN port forwards to the NAS (TCP+UDP, any source); the NAS service they served
+- Why: risk R1. The forwards expose a NAS service to the internet. Once its tasks run in the new container behind the VPN gateway (part 1), nothing needs the forwards
+- Preconditions (revised 2026-11-05): part 1 applied and verified (done). The owner chose option 3 over routing the NAS service through a gateway tunnel: it stays where it is, and the task move waits for E1. Accepted consequence: until E1, its inbound connections are lost (slower or stalled), and its listener may still be on but is unreachable from outside
 - Diff: disable both port forwards (disable, don't delete, so rollback is one toggle). No other firewall, VLAN or routing change
 - Process: chat approval of this entry; owner told a 1Password prompt is coming; `write-gate on unifi-write`; `scripts/change-window.sh open "A1: close NAS peer-port forwards"`; apply; verify; `close`
 - Verify: both forwards read disabled through the read connection and no other policy or port forward changed; the NAS web UI and shares unaffected; both ports closed when probed from outside (owner or an outside probe); the new gateways' forwarded ports unaffected
 - Rollback: re-enable the two forwards (the 2026-10-28 attempt was rolled back the same way)
 - Approved by / when: the owner, in chat, 2026-11-05
 - Applied 2026-11-05: change window opened (restore point: the nightly gateway backup, 8 hours old); both WAN port forwards to the NAS toggled to disabled through the write connection, one call each with the owner approving; window closed and the write gate turned off. Nothing else touched
-- Verified 2026-11-05 through the read connection: both forwards read disabled; the only two forwards, nothing else listed. Not done: an outside probe of the two ports; confirming the NAS client's peer listener state (the owner, in DSM); watching the IPS log for the blocks from the one outside address to stop
+- Verified 2026-11-05 through the read connection: both forwards read disabled; the only two forwards, nothing else listed. Not done: an outside probe of the two ports; confirming the NAS-side listener state (the owner, in DSM); watching the IPS log for the blocks to stop
 
 ## 2026-11-02: Backlog A1, part 1 (new VPN provider and a second client container)
 - Status: proposed (tier 1 for the container work; tier 2 only if the new client's NFS folder needs a NAS share-permission change)
-- Resumed 2026-11-05: the refund is processed and the new account is open; the owner approved part 1 in chat. Read-only checks 2026-11-05: the existing gateway container is unhealthy (old tunnel); the app VM's `/data` NFS mount is already rw and world-writable, so no share-permission change is needed
+- Resumed 2026-11-05: the refund is processed and the new account is open; the owner approved part 1 in chat. Read-only checks 2026-11-05: the existing gateway container is unhealthy (old tunnel); the app VM's `/data` mount is already writable, so no share-permission change is needed
 - Target: app VM (VPN gateway container, a second gateway + client pair); the NAS download share (NFS mount only)
-- Why: A1. Move peer-to-peer downloads behind the VPN gateway with a provider that offers inbound port forwarding. The current provider has none. The owner chose a new provider on 2026-11-02 (name in `private/changes.md`) that offers it over WireGuard: the port is assigned at connect and the gateway container supports it natively. Both private trackers the owner uses were checked by the owner and allow VPN use. The refund from the current provider is likely but pending
+- Why: A1. Move a NAS service's traffic behind the VPN gateway with a provider that offers inbound port forwarding. The current provider has none. The owner chose a new provider on 2026-11-02 (name in `private/changes.md`) that offers it over WireGuard: the port is assigned at connect and the gateway container supports it natively. The owner checked that the services involved allow VPN use. The refund from the current provider is likely but pending
 - Diff:
   1. Existing gateway container: change the provider, with a WireGuard config generated with port forwarding enabled; turn the container's port forwarding on; pin one server so the exit IP is stable; an up-command sets the client's listening port to the assigned port on each (re)connect. Keep the old provider config until the refund is confirmed
   2. New second gateway container + second client container sharing its network namespace, for the private-tracker downloads: its own container-VLAN static IP, its own WireGuard config and pinned server (a different exit IP from the first), its own forwarded port. Uses a second device slot on the new account
@@ -209,7 +209,7 @@ Template:
 - No gateway change in this part. The new containers sit on the existing container VLAN; the owner checks that the existing zone rules still fit
 - Verify (each gateway container): the exit IP is the new provider's and differs between the two; the forwarded port reads open from outside; the kill switch holds when the tunnel is stopped (no traffic leaves outside it); DNS doesn't leak; after a container restart the client's listening port matches the newly assigned one
 - Rollback: restore the old provider config in the first gateway container and restart; stop and remove the second pair; resume the original NAS client tasks (they aren't deleted until part 2 is verified)
-- Approved by / when: part 1 approved by the owner in chat, 2026-11-05 (part 2 not yet). Mapping (owner; names in `private/changes.md`): the first config goes to the existing gateway; the second goes to the new pair that replaces the NAS download client
+- Approved by / when: part 1 approved by the owner in chat, 2026-11-05 (part 2 not yet). Mapping (owner; names in `private/changes.md`): the first config goes to the existing gateway; the second goes to the new pair that replaces the NAS-side service
 - Applied 2026-11-05 (container work, over SSH to the app VM, the owner approving each call): the existing gateway now runs on the new provider (custom WireGuard, pinned server, port forwarding, an up-command that sets the client's listening port); a second gateway and client pair added on the next free container-VLAN address. Keys went from the password manager to the VM's `.env` without being printed; the old provider's variables and an `.env` backup stay for rollback. One side change: the existing client's web-UI auth whitelist gained `127.0.0.1/32` (only the two containers share that loopback) so the up-command can call its API; the config was backed up first. Compose changes are two commits in the app VM's local compose repo
 - Verified 2026-11-05: both gateways healthy; each client's listening port equals its gateway's forwarded port, before and after a restart; the two tunnels' exit IPs differ from each other and from the home address; the gateways' firewall default policy is DROP in all chains (kill switch) and DNS resolves locally in each. Not yet done: the forwarded ports read open from outside; stopping a tunnel to watch traffic stop; a DNS-leak test page; moving the download tasks (owner, in the client UI)
 - Couldn't verify (parts 1 and 2):
@@ -217,7 +217,7 @@ Template:
   - The exact up-command call into the client's web API and its auth on this instance
   - Whether the new client's NFS folder needs a NAS share-permission change
   - How the provider treats a lingering session after an unclean disconnect, and how often the assigned port changes in practice
-  - Whether the NAS client's peer listener is off (the read account can't see it)
+  - Whether the NAS-side listener is off (the read account can't see it)
 
 ## 2026-11-02: Backlog A5 (travel router) and A7 (unused switch ports)
 - Status: **rejected** by the owner, in chat
@@ -251,7 +251,7 @@ Template:
 - Target: gateway, the container VLAN's network object, two DHCP DNS fields. No firewall change
 - Why: DHCP on that VLAN hands out two resolvers on the server VLAN. Containers → Internal blocks them, and nothing answers there anyway. A DHCP client on the VLAN would get no DNS. Stopgap until B4
 - Check first, all from live reads on 2026-10-31 unless noted:
-  1. **Pass.** The VLAN hands out the two resolvers `private/network.md` records, with custom DHCP DNS on. Containers → Gateway is the predefined allow-all, enabled; the only other rule on that pair is the predefined mDNS allow. Containers → Internal still ends in block all, and no user rule reaches the server VLAN
+  1. **Pass.** The VLAN hands out the two resolvers `private/network.md` records, with custom DHCP DNS on. Containers → Gateway is the predefined allow, enabled; the only other rule on that pair is the predefined mDNS allow. Containers → Internal still ends in block all, and no user rule reaches the server VLAN
   2. **Pass: nothing answers at either address.** From the admin laptop on the main LAN: DNS over UDP and over TCP timed out on both, and ping failed on both. The controller has never recorded a client at one address; the other's last client was the filter host, last seen 2024-08. A second filter host on the main LAN, last seen 2026-10-23, doesn't answer either. So the block is not what's breaking DNS today; there's no resolver behind it
   3. **Pass: no live DHCP client on the VLAN.** The controller's live list shows one VLAN client, the VPN gateway container, which has a static address. The other containers (static, seen earlier today) drop out of the live list when quiet. The only client ever seen in the DHCP pool is the app VM's old address on its VLAN NIC, last seen 2026-10-20, and the VM's inventory says that NIC has no host address now. An unknown wired client outside the pool was last seen the same day. All 44 wireless clients online are on the main LAN. Impact today: none expected
   4. **Pass, from outside the VLAN.** The gateway answered correct records on its address on this VLAN, queried from the main LAN, and the Containers → Gateway policy allows it. Not tested from a client inside the VLAN (see "Couldn't verify")
@@ -275,9 +275,9 @@ Template:
 ## 2026-10-31: Accept the NAS port forwards as a known risk (R1)
 - Status: proposed; accepted when the owner merges the PR
 - Target: docs only. `strategy.md` (T2 re-rated, new "Accepted risks" register), `network.md` (inbound section, finding 1), `backlog.md` (A1 reshaped). No device changes
-- Why: the owner identified what the two forwards serve: the inbound peer port of the NAS's built-in peer-to-peer download client. That narrows T2 from "DSM on the internet" to "one closed-source listener on the internet", so the docs were overstating the likelihood and understating why it still matters (the listener runs on the NAS, on the flat LAN). The owner wants inbound peers to keep working, so the forwards stay for now and the exposure is written down as a risk with an exit
+- Why: the owner identified what the two forwards serve: one service on the NAS, not DSM or the shares. That narrows T2 from "DSM on the internet" to "one listener on the internet", so the docs were overstating the likelihood and understating why it still matters. The owner wanted the service to keep working, so the forwards stayed for now and the exposure was written down as a risk with an exit
 - Check first: done. The read account can't see the client's settings (DSM error 105) and Container Manager isn't installed on the NAS, so the client is the built-in one, as the owner said. Which port it listens on and whether the forwards hit only that port are still the owner's to confirm in DSM (network.md, "Couldn't verify")
-- Alternatives considered: disable both forwards (zero inbound exposure, peers can't connect in; the owner declined); a proxy in front of the ports (moves the address, not the code; rejected); restrict the forwards' source (meaningless for peer traffic, which comes from anywhere; rejected); the move to the app VM behind the VPN gateway container with provider port forwarding (the exit for R1, now the shape of A1)
+- Alternatives considered: disable both forwards (zero inbound exposure; the owner declined at the time); a proxy in front of the ports (moves the address, not the code; rejected); restrict the forwards' source (meaningless for this traffic; rejected); the move to the app VM behind the VPN gateway container with provider port forwarding (the exit for R1, now the shape of A1)
 - Diff: see the PR
 - Rollback: revert the PR; nothing on any device changed
 - Approved by / when: owner, in chat, 2026-10-31 ("mark what I am accepting to be a risk"); the merge is the acceptance
