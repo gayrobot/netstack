@@ -134,19 +134,21 @@ Template:
 - Approved by / when: pending
 
 ## 2026-11-02: Backlog A1, part 2 (close the two NAS peer-port forwards)
-- Status: proposed (tier 2). Do not start until part 1 is applied and verified. Also on hold with part 1
+- Status: **applied and verified 2026-11-05** (tier 2), revised by the owner: close the forwards now, move the download tasks later (new last backlog item E1)
 - Target: gateway, the two WAN port forwards to the NAS (TCP+UDP, any source); the NAS download client's peer listener
 - Why: risk R1. The forwards expose the NAS download client's inbound peer port to the internet. Once its download tasks run in the new client container behind the VPN gateway (part 1), nothing needs the forwards
-- Preconditions: part 1 applied and verified; all peer-to-peer tasks moved off the NAS client and seeding from the new container; the owner confirms the NAS client's peer listener is off (the read account can't see that setting)
+- Preconditions (revised 2026-11-05): part 1 applied and verified (done). The owner chose option 3 over routing the NAS client through a gateway tunnel: the NAS client stays where it is, and the task move waits for E1. Accepted consequence: until E1, the NAS client's peer-to-peer tasks lose inbound peers (slower or stalled), and the client's own peer listener may still be on but is unreachable from outside
 - Diff: disable both port forwards (disable, don't delete, so rollback is one toggle). No other firewall, VLAN or routing change
 - Process: chat approval of this entry; owner told a 1Password prompt is coming; `write-gate on unifi-write`; `scripts/change-window.sh open "A1: close NAS peer-port forwards"`; apply; verify; `close`
-- Verify: both ports closed when probed from outside the network; the new client still reports a connectable forwarded port; seeding continues; the NAS web UI and shares unaffected
-- Rollback: re-enable the two forwards (the 2026-10-28 attempt was rolled back the same way). Move the tasks back to the NAS client if needed
-- Approved by / when: pending
+- Verify: both forwards read disabled through the read connection and no other policy or port forward changed; the NAS web UI and shares unaffected; both ports closed when probed from outside (owner or an outside probe); the new gateways' forwarded ports unaffected
+- Rollback: re-enable the two forwards (the 2026-10-28 attempt was rolled back the same way)
+- Approved by / when: the owner, in chat, 2026-11-05
+- Applied 2026-11-05: change window opened (restore point: the nightly gateway backup, 8 hours old); both WAN port forwards to the NAS toggled to disabled through the write connection, one call each with the owner approving; window closed and the write gate turned off. Nothing else touched
+- Verified 2026-11-05 through the read connection: both forwards read disabled; the only two forwards, nothing else listed. Not done: an outside probe of the two ports; confirming the NAS client's peer listener state (the owner, in DSM); watching the IPS log for the blocks from the one outside address to stop
 
 ## 2026-11-02: Backlog A1, part 1 (new VPN provider and a second client container)
 - Status: proposed (tier 1 for the container work; tier 2 only if the new client's NFS folder needs a NAS share-permission change)
-- On hold (owner, in chat, 2026-11-02): the new provider account will be opened after the old provider's refund is processed. No approval has been given and no read-only checks have started. Ask the owner before resuming
+- Resumed 2026-11-05: the refund is processed and the new account is open; the owner approved part 1 in chat. Read-only checks 2026-11-05: the existing gateway container is unhealthy (old tunnel); the app VM's `/data` NFS mount is already rw and world-writable, so no share-permission change is needed
 - Target: app VM (VPN gateway container, a second gateway + client pair); the NAS download share (NFS mount only)
 - Why: A1. Move peer-to-peer downloads behind the VPN gateway with a provider that offers inbound port forwarding. The current provider has none. The owner chose a new provider on 2026-11-02 (name in `private/changes.md`) that offers it over WireGuard: the port is assigned at connect and the gateway container supports it natively. Both private trackers the owner uses were checked by the owner and allow VPN use. The refund from the current provider is likely but pending
 - Diff:
@@ -157,7 +159,9 @@ Template:
 - No gateway change in this part. The new containers sit on the existing container VLAN; the owner checks that the existing zone rules still fit
 - Verify (each gateway container): the exit IP is the new provider's and differs between the two; the forwarded port reads open from outside; the kill switch holds when the tunnel is stopped (no traffic leaves outside it); DNS doesn't leak; after a container restart the client's listening port matches the newly assigned one
 - Rollback: restore the old provider config in the first gateway container and restart; stop and remove the second pair; resume the original NAS client tasks (they aren't deleted until part 2 is verified)
-- Approved by / when: pending
+- Approved by / when: part 1 approved by the owner in chat, 2026-11-05 (part 2 not yet). Mapping (owner; names in `private/changes.md`): the first config goes to the existing gateway; the second goes to the new pair that replaces the NAS download client
+- Applied 2026-11-05 (container work, over SSH to the app VM, the owner approving each call): the existing gateway now runs on the new provider (custom WireGuard, pinned server, port forwarding, an up-command that sets the client's listening port); a second gateway and client pair added on the next free container-VLAN address. Keys went from the password manager to the VM's `.env` without being printed; the old provider's variables and an `.env` backup stay for rollback. One side change: the existing client's web-UI auth whitelist gained `127.0.0.1/32` (only the two containers share that loopback) so the up-command can call its API; the config was backed up first. Compose changes are two commits in the app VM's local compose repo
+- Verified 2026-11-05: both gateways healthy; each client's listening port equals its gateway's forwarded port, before and after a restart; the two tunnels' exit IPs differ from each other and from the home address; the gateways' firewall default policy is DROP in all chains (kill switch) and DNS resolves locally in each. Not yet done: the forwarded ports read open from outside; stopping a tunnel to watch traffic stop; a DNS-leak test page; moving the download tasks (owner, in the client UI)
 - Couldn't verify (parts 1 and 2):
   - The gateway container's current environment on the running container (not in tracked docs)
   - The exact up-command call into the client's web API and its auth on this instance
