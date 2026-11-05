@@ -20,7 +20,7 @@ Template:
 - Why: T1 (backlog Phase B). The owner wants devices moved by MAC on the existing Wi-Fi (no SSID change), cloud-dependent devices kept online, HomeKit devices kept working across VLANs, and the cameras left as they are
 - Diff: see [segmentation.md](segmentation.md) (networks, policies 1–7, mDNS scope, rollout steps 1–5). Per-device classes in `private/segmentation-devices.md`
 - Check first (each blocks the step that needs it):
-  1. **Owner** answers the four decisions in segmentation.md (update window, thermostats and lighting bridge, the four unidentified devices, tier for single-device overrides)
+  1. **Owner** answers the four decisions in segmentation.md. Answered in chat 2026-11-05: the daily 03:00–04:00 update window for IoT-Local; the thermostats and the lighting bridge to IoT-Local; single-client moves are tier 1. Still open: naming the unidentified clients (blocks only those clients' moves)
   2. **Owner** reads the site's current mDNS mode (the read connection can't), so step 1's rollback restores it exactly
   3. **Owner** checks, per HomeKit Wi-Fi device to be moved, that it isn't a Matter accessory
   4. Fresh restore point (`change-window.sh open`) before step 1 and before each batch of moves
