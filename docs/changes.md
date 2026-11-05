@@ -14,6 +14,20 @@ Template:
 - Approved by / when:
 ```
 
+## 2026-11-05: Backlog B2 and B8 (smart devices to IoT VLANs by MAC; mDNS for HomeKit)
+- Status: **proposed** (design only; nothing written). Tier 2
+- Target: the gateway: two new networks (IoT-Cloud, IoT-Local) in a new IoT zone, seven zone policies, the site's mDNS proxy (Custom), IPS on both networks; then a per-client Virtual Network Override for each smart device
+- Why: T1. Every smart device shares the flat main LAN with the NAS, the servers and the container admin UIs. The owner wants devices moved by MAC on the existing Wi-Fi (no SSID change), cloud-dependent devices kept online, HomeKit devices kept working across VLANs, and the cameras left as they are
+- Diff: see [segmentation.md](segmentation.md) (networks, policies 1–7, mDNS scope, rollout steps 1–5). Per-device classes in `private/segmentation-devices.md`
+- Check first (each blocks the step that needs it):
+  1. **Owner** answers the four decisions in segmentation.md (update window, thermostats and lighting bridge, the four unidentified devices, tier for single-device overrides)
+  2. **Owner** reads the site's current mDNS mode (the read connection can't), so step 1's rollback restores it exactly
+  3. **Owner** checks, per HomeKit Wi-Fi device to be moved, that it isn't a Matter accessory
+  4. Fresh restore point (`change-window.sh open`) before step 1 and before each batch of moves
+- Rollback: per device, clear the override and reconnect; for step 1, disable the two networks (empty) and set mDNS back to the recorded mode
+- Verify: per move, the client's network in UniFi, the accessory's `reachable` in HomeKit, and the gateway's blocked flows for that client, all through the read connections
+- Approved by / when: not yet
+
 ## 2026-11-05: Backlog A12 (HomeClaw vetting; accessory allowlist)
 - Status: **not applied; risk accepted by the owner 2026-11-05** (strategy.md R2). The app's settings screen is buggy and doesn't let the owner change the filter, so the allowlist can't be set. Tier 3 (agent access controls) stays the owner's. The vetting is written
 - Target: the HomeClaw app's accessory filter (Settings, Devices) on the host that runs it
