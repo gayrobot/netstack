@@ -29,18 +29,18 @@ One gap: the UniFi MCP has no tool for the override (read 2026-11-05: none of th
 
 | Network | Zone | Who's on it | Internet | Reaches the LAN |
 |---|---|---|---|---|
-| Main LAN (unchanged) | Internal | phones, laptops, tablets, watches, **the Apple home hubs**, the AirPlay soundbar, the game console, the arcade gateways, the servers | yes | yes |
-| **IoT-Cloud** (new) | **IoT** (new) | devices that only work through the vendor's cloud: dishwasher, 2 robot vacuums, 2 air-treatment appliances, the irrigation controller, the garage opener (not in HomeKit), the photo frame | yes | no |
-| **IoT-Local** (new) | **IoT** | HomeKit devices that work locally: smart plugs, the lighting bridge, Wi-Fi light strips and lamps; the thermostats if the owner accepts the trade-off below | **no** (DNS and NTP from the gateway only) | no |
-| Cameras | Internal (unchanged) | the 4 cameras and the doorbell | unchanged | unchanged |
+| Main LAN (unchanged) | Internal | phones, laptops, tablets, **the Apple home hubs**, AirPlay speakers, the arcade gateways, the servers | yes | yes |
+| **IoT-Cloud** (new) | **IoT** (new) | devices that only work through the vendor's cloud, such as the dishwasher and the robot vacuums | yes | no |
+| **IoT-Local** (new) | **IoT** | HomeKit devices that work locally: smart plugs, the lighting bridge, Wi-Fi lamps; the thermostats if the owner accepts the trade-off below | **no** (DNS and NTP from the gateway only) | no |
+| Cameras | Internal (unchanged) | the cameras and the doorbell | unchanged | unchanged |
 | Container VLAN, server VLAN | unchanged | unchanged | | |
 
-Counts are from the 2026-11-05 read. The per-device list, with MACs, is in `private/segmentation-devices.md`.
+Classes come from the 2026-11-05 read. The per-device list is in `private/segmentation-devices.md`.
 
 ### Who stays on the main LAN, and why
 
-- **The Apple home hubs (6 HomePods and Apple TVs) stay with the phones.** They are what talks to HomeKit accessories when the phone isn't home, they are the Thread border routers, and they are AirPlay targets. Thread accessories (the locks, some light strips) have no Wi-Fi address at all; they reach the house through the hubs, so they move nowhere. Moving the hubs would break AirPlay and Thread for no gain.
-- **The soundbar** is an AirPlay target the phones need on the same network.
+- **The Apple home hubs (HomePods and Apple TVs) stay with the phones.** They are what talks to HomeKit accessories when the phone isn't home, they are the Thread border routers, and they are AirPlay targets. Thread accessories have no Wi-Fi address at all; they reach the house through the hubs, so they move nowhere. Moving the hubs would break AirPlay and Thread for no gain.
+- **AirPlay speakers** are targets the phones need on the same network.
 - **The cameras and doorbell** (owner, 2026-11-05). B5 is withdrawn.
 - **The arcade gateways** (owner call, 2026-11-02).
 
@@ -73,7 +73,7 @@ This is A4, done where it belongs (owner's call, 2026-11-02).
 
 ### The trap: Matter and IPv6
 
-Matter devices (and HomeKit over IPv6) talk over IPv6 link-local and the hubs' private (ULA) prefix. The read on 2026-11-05 shows the hubs advertising that prefix on the main LAN, and at least one appliance taking an address from it. Neither crosses a VLAN boundary: the mDNS proxy would announce the device, and the hub couldn't reach it. So **a Wi-Fi Matter device stays on the main LAN** until the IoT networks get routed IPv6, which is its own decision. The owner checks each HomeKit Wi-Fi device in the Home app (accessory settings show a "Matter" section if it is one) before it's moved.
+Matter devices (and HomeKit over IPv6) talk over IPv6 link-local and the hubs' private (ULA) prefix. The read on 2026-11-05 shows the hubs advertising that prefix on the main LAN, and other devices taking addresses from it. Neither crosses a VLAN boundary: the mDNS proxy would announce the device, and the hub couldn't reach it. So **a Wi-Fi Matter device stays on the main LAN** until the IoT networks get routed IPv6, which is its own decision. The owner checks each HomeKit Wi-Fi device in the Home app (accessory settings show a "Matter" section if it is one) before it's moved.
 
 ## The trade-off the owner has to decide
 
@@ -110,7 +110,7 @@ A new device joins the house Wi-Fi and lands on the main LAN, like today. That i
 
 1. **Updates on IoT-Local:** the daily window (recommended), no updates, or send them to IoT-Cloud.
 2. **Thermostats and the lighting bridge:** IoT-Local (HomeKit only, recommended) or IoT-Cloud (keeps the vendor apps).
-3. **Four devices the agent couldn't identify** (listed in `private/segmentation-devices.md`, with vendor prefix and when each first joined). Each stays on the main LAN until named.
+3. **Clients the agent couldn't identify** (listed in `private/segmentation-devices.md`, with what is known about each). Each stays on the main LAN until named.
 4. **Tier for a single-device override** once the networks and policies exist: stay tier 2 (default), or tier 1 like a DHCP reservation. Changing a tier is changing these controls, so it's tier 3: the owner decides, the agent doesn't.
 
 ## Couldn't verify
@@ -118,6 +118,6 @@ A new device joins the house Wi-Fi and lands on the main LAN, like today. That i
 - That VNO behaves the same for a wired client (the lighting bridge) as for a wireless one. Ubiquiti's article says it's done at the gateway with no switch configuration; the pilot doesn't cover a wired device, so the bridge goes last and alone.
 - The site's current mDNS mode. The read connection can't see it (the MCP doesn't expose the site-level setting).
 - Which accessories are Matter, and which home-automation integrations use device-initiated callbacks.
-- Which devices need the internet for anything beyond their vendor app. The gateway logs **blocked** flows only (2026-11-05: allowed-flow statistics are empty), so there's no record today of who talks to what. Blocked flows after step 2 are the first evidence.
+- Which devices need the internet for anything beyond their vendor app. There's no per-device traffic record to answer it from yet; blocked flows after step 2 are the first evidence.
 - Whether IoT-Local devices check for firmware updates inside a one-hour window.
-- The match between HomeKit's plugs and the Wi-Fi plugs. HomeKit lists 10 outlets; the controller sees 11 plugs on Wi-Fi. One (a different brand) has no HomeKit accessory and is listed as unidentified until the owner names it.
+- The match between some HomeKit accessories and Wi-Fi clients (details in `private/`).

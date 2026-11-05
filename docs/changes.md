@@ -17,7 +17,7 @@ Template:
 ## 2026-11-05: Backlog B2 and B8 (smart devices to IoT VLANs by MAC; mDNS for HomeKit)
 - Status: **proposed** (design only; nothing written). Tier 2
 - Target: the gateway: two new networks (IoT-Cloud, IoT-Local) in a new IoT zone, seven zone policies, the site's mDNS proxy (Custom), IPS on both networks; then a per-client Virtual Network Override for each smart device
-- Why: T1. Every smart device shares the flat main LAN with the NAS, the servers and the container admin UIs. The owner wants devices moved by MAC on the existing Wi-Fi (no SSID change), cloud-dependent devices kept online, HomeKit devices kept working across VLANs, and the cameras left as they are
+- Why: T1 (backlog Phase B). The owner wants devices moved by MAC on the existing Wi-Fi (no SSID change), cloud-dependent devices kept online, HomeKit devices kept working across VLANs, and the cameras left as they are
 - Diff: see [segmentation.md](segmentation.md) (networks, policies 1–7, mDNS scope, rollout steps 1–5). Per-device classes in `private/segmentation-devices.md`
 - Check first (each blocks the step that needs it):
   1. **Owner** answers the four decisions in segmentation.md (update window, thermostats and lighting bridge, the four unidentified devices, tier for single-device overrides)
