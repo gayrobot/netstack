@@ -18,7 +18,7 @@ Columns: **Threat** is from the strategy's threat table. **Tier** is from [chang
 | A8 | Review VPN peers: one per device, delete unknown ones | T6 | owner | S | **done 2026-11-02.** The only server is Teleport (owner's phone, laptop, tablet); the old WireGuard server is gone. Teleport doesn't list enrolled devices, so the peer review moves to O7 |
 | A9 | Review gateway admin accounts; MFA on the cloud account | T6 | owner | S | **done 2026-11-02.** Six console users, all known; MFA on the owner's cloud account; the home-automation account trimmed |
 | A10 | NAS: disable the default `admin` and `guest` accounts; 2FA on the owner's account; disable QuickConnect if unused | T2, T6 | owner | S | **done 2026-11-02.** `admin` and `guest` deactivated; the one admin is the owner's daily account, with 2FA; no other account is an admin; QuickConnect off. Leftover: a second owner account is active, non-admin, in the web-server group `http`. Deactivate it if unused, or take it out of `http` |
-| A11 | NAS share clean-up: the world-writable share, the empty shares, the stale NFS rule, the unused packages | T2, T4 | 2 / owner | S | open |
+| A11 | NAS share clean-up: the world-writable share, the empty shares, the stale NFS rule, the unused packages | T2, T4 | 2 / owner | S | open; proposed in `changes.md` 2026-11-05, waiting on the owner's checks (the read account can't see share permissions, NFS rules or packages) |
 | A12 | Vet the home-automation plugin (HomeClaw) that's already installed. It can act on locks and cameras | T5 | 3 | M | open; listed as "not vetted" in [vetting/README.md](vetting/README.md) |
 
 ## Phase B: segmentation

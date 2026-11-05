@@ -14,6 +14,26 @@ Template:
 - Approved by / when:
 ```
 
+## 2026-11-05: Backlog A11 (NAS share clean-up)
+- Status: proposed. Tier 2 (share permissions); nothing is applied. The list of what to change isn't final: the checks below decide it, and **the write waits until each check is done or the owner waives it in chat**
+- Target: the NAS's shared folders, its NFS rules and its installed packages
+- Why: T2 and T4 in `strategy.md`. The 2026-10-21 audit found one world-writable share, some empty shares, a stale NFS rule and unused packages. The audit's specifics aren't in the repo, so this entry starts by re-reading them
+- Read so far (2026-11-05, read connection): 15 shared folders listed, each with a path, a writable flag and times. Share permissions, NFS rules and the package list all return **code 105 (no permission)**, because the read account isn't an admin. The agent can't see which share is world-writable, which are empty or which rule is stale
+- Checks (each blocks the change that depends on it):
+  1. **Owner, DSM → Control Panel → Shared Folder:** for each folder, who has read/write (named users or "everyone"). Report names of any folder where a guest, `everyone` or a default group has write
+  2. **Agent, read connection (`list_directory`, `search_files`):** for each folder the owner calls empty, confirm it holds no files. A folder with files is not empty
+  3. **Owner, Control Panel → Shared Folder → NFS Permissions:** list each rule's allowed client and squash setting. Name the rule that matches no current client. The app VM's `/data` mount must keep working, so that rule stays (C4 narrows it later)
+  4. **Owner, Package Center → Installed:** list the packages. Mark which you use. A package that something else depends on, or that the backup job needs, stays
+  5. **Restore point:** `change-window.sh open` checks for a fresh one. The share clean-up has no undo, so nothing is deleted. Folders are only renamed or have permissions removed, never deleted
+- Diff (draft, filled in after the checks):
+  - World-writable share: remove "everyone" write, grant write to the named users and groups that use it
+  - Empty shares: remove the folder only after check 2; the data is none, but the name may be in a client's saved settings
+  - Stale NFS rule: delete the one rule from check 3
+  - Unused packages: stop, then uninstall, only those marked unused in check 4
+- Rollback: restore the permission entry; for a share or rule, recreate it from the values recorded in `private/changes.md`; reinstall a package from Package Center
+- Verify: the agent re-reads the share list; the app VM's `/data` mount is still mounted and writable; the gateway-backup job's next run succeeds
+- Approved by / when: pending. Needs chat approval of the final diff before `change-window.sh open`
+
 ## 2026-11-02: Backlog A8, A9, A10 (VPN peers, gateway admins, NAS accounts)
 - Status: **applied 2026-11-02** by the owner (tier 3: accounts and authentication are never changed through the agent. The agent read what it could and wrote the checklist; the owner checked and changed things in the UIs and answered in chat)
 - Target: the gateway's remote-user VPN and its peers; the gateway console's admin accounts and the owner's cloud account; the NAS's local accounts, 2FA and QuickConnect
