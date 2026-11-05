@@ -20,7 +20,7 @@ Each device has two MCP connections:
 
 What each tier needs:
 
-- **Tier 1** (small, reversible: names, labels, a port forward toggle, a DHCP reservation, restarting one device): one click on the call, then a log entry.
+- **Tier 1** (small, reversible: names, labels, a port forward toggle, a DHCP reservation, restarting one device, moving one client between the main LAN and an IoT network that already exists, per [segmentation.md](segmentation.md); owner, 2026-11-05): one click on the call, then a log entry.
 - **Tier 2** (firewall, VLAN, DHCP scopes, WAN, VPN, WLAN, routing, NAS share permissions): a `changes.md` entry, chat approval, then `change-window.sh open`. With `WINDOW_MODE=gate` the script only checks for a fresh off-box restore point and logs; the write itself is still one click per call.
 - **Tier 3** (accounts, authentication, backups, snapshots, these controls): never through the agent.
 
