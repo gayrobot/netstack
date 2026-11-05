@@ -47,7 +47,7 @@ Copy this into `docs/vetting/<name>.md` and fill in every line. Write "not check
 | UniFi Network MCP (sirkirby/unifi-mcp) | plugin 1.1.5, PyPI 0.38.3 | OK with conditions | [unifi-mcp.md](unifi-mcp.md) |
 | Synology MCP (atom2ueki/mcp-server-synology) | 1.8.0 | **Not OK as configured** (admin account, 43 ungated write tools) | [synology-mcp.md](synology-mcp.md) |
 | synology-extras (first-party, `tools/synology-extras/`) | 0.1.0 | OK with conditions (not registered yet) | [synology-extras.md](synology-extras.md) |
-| HomeClaw plugin (omarshahine/HomeClaw) | 1.0.13 (app 1.0.14) | OK with conditions (filter is off: locks and cameras are exposed until the owner sets an allowlist) | [homeclaw.md](homeclaw.md) |
+| HomeClaw plugin (omarshahine/HomeClaw) | 1.0.13 (app 1.0.14) | OK with conditions; condition 1 not met, risk accepted by the owner (strategy R2) | [homeclaw.md](homeclaw.md) |
 
 ### Wanted by the observer ([spec.md](../spec.md)), not yet reviewed
 
