@@ -31,9 +31,9 @@ Template:
   3. **Owner decides** whether the per-folder entry for the owner's account is dropped (it is only redundant if that account is in `administrators`; the read account can't show membership). The two agent accounts' entries are a different question: see "Not through this change" below
   4. **Restore point:** `change-window.sh open` checks for a fresh one. Nothing here deletes data
 - Diff (draft, filled in after the checks):
-  - World-writable item: the read account's home folder from 777 to 755 (owner, in DSM, since it's an account's folder)
-  - Empty shares: remove the two empty shares only after the owner says nothing mounts them (the app VM mounts only the share with the NFS rule; SMB clients are unknown)
-  - Unused packages: uninstall DSM Agent, Synology AI Console, and SAN Manager after check 2
+  - World-writable item: unconfirmed. Home folders sit outside Shared Folder, and DSM shows mode 777 on ACL-managed folders whatever the real access is. Check the folder's Permission tab in File Station before changing anything; if the ACL shows only the account and administrators, no change is needed
+  - Empty shares: one of the two is the DSM user-home share, which isn't in the Shared Folder list and can't be removed; drop it from the change. Remove the other one only after the owner says nothing mounts it (the app VM mounts only the share with the NFS rule; SMB clients are unknown)
+  - Unused packages: the owner tried to uninstall DSM Agent, SAN Manager and Synology AI Console on 2026-11-05 and DSM refused (reason not yet recorded). Open: the exact message. Until then these stay
   - Stale NFS rule: none left; dropped from this change
 - Not through this change (tier 3, the agent's own access): narrowing the write account's Read & Write from every folder to the ones a change needs, and the agent accounts' per-folder entries generally. Proposed for the owner to do in DSM
 - Noticed, not part of A11: Python2 is end-of-life and Node.js v18 is past support; both read as unused. The owner decides. QuickConnect is installed; A10 turned it off, not removed
