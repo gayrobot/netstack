@@ -10,8 +10,8 @@
 | OS | Ubuntu 26.04 LTS |
 | Docker | 29.9, AppArmor + seccomp default profiles |
 | Compose | one project, versioned in git, `.env` mode 600 |
-| NICs | management NIC on the main LAN (DHCP + SLAAC, includes a **global IPv6**); second NIC is the macvlan parent for the container VLAN |
-| Storage | bulk data over NFSv4.1 from the NAS, `sec=sys` |
+| NICs | management NIC on the main LAN (DHCP + SLAAC); second NIC is the macvlan parent for the container VLAN |
+| Storage | bulk data over NFSv4.1 from the NAS |
 
 ## How containers are exposed
 
@@ -25,15 +25,13 @@
 | Port | Bind | Service | Flag |
 |---|---|---|---|
 | 22/tcp | `0.0.0.0`, `[::]` | sshd | LAN-only in practice (External → Internal blocks inbound v6) |
-| 111/tcp+udp | `0.0.0.0`, `[::]` | rpcbind | ⚠ not needed for NFSv4 |
 | 53, 323 | localhost | resolved, chronyd | local only |
 
 ## Findings
 
-1. **rpcbind is listening on all interfaces.** Disabling it is proposed.
-2. **NFS `sec=sys`:** the NAS trusts client-asserted UIDs, and the inventory account's `docker` group membership is root-equivalent. Restrict the export to this VM and squash root.
-3. **The inventory account is over-privileged** (`docker` + `sudo`). Planned fix: a read-only Docker API proxy plus a dedicated user with neither group.
-4. Images pinned by tag only.
+1. Service hardening on the VM is proposed (backlog C3, C4).
+2. The inventory account is broader than it needs to be (backlog C5).
+3. Images are pinned by tag only (backlog C6).
 
 ## Couldn't verify
 
