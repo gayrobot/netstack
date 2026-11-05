@@ -14,6 +14,41 @@ Template:
 - Approved by / when:
 ```
 
+## 2026-11-05: Backlog B2, segmentation step 1 (create the IoT networks, zone and policies; no clients moved)
+- Status: **proposed**, waiting for chat approval. Tier 2
+- Target: the gateway. Two new networks, one new zone, user-defined zone policies, the site mDNS proxy, the IPS network list. No client changes
+- Why: step 1 of [segmentation.md](segmentation.md). Every later move is a tier-1 single-client move into these networks, so they have to exist and be verified empty first
+- Current state (read connection, 2026-11-05): networks are the main LAN (untagged), the container VLAN (2) and the server VLAN (3); zones are the six built-in ones plus Containers; seven user-defined policies, none touching an IoT zone; no custom switch port profiles; VLAN IDs 4 and 5 and subnets 10.0.4.0/24 and 10.0.5.0/24 unused
+- Who applies what: the write tools can create networks and policies but not the zone (zone creation needs an API key, which the write connection doesn't have), the mDNS proxy (no tool) or the IPS network list (read-only in the tool, as in A3). So:
+  - **Owner, in the UI:** create the IoT zone; set the mDNS proxy; add the two networks to IPS
+  - **Agent, write connection (one approved call each):** the two networks, then the policies
+- Checks first (each one blocks the write):
+  1. `scripts/change-window.sh open "B2 step 1: IoT networks"` passes, so there's an off-box restore point younger than 3 days
+  2. **Owner** writes down the current mDNS proxy mode and its networks and services (the read connection can't see it), so rollback restores it exactly
+  3. Gateway memory under 80% just before IPS gains two networks (read connection; it was 74.6% before A3)
+  4. Read connection, just before: VLAN 4 and 5 and both subnets still unused
+- Diff, in order:
+  1. **Owner:** create zone **IoT** (Settings, Security, zones), no networks
+  2. **Agent:** create network **IoT-Cloud**: VLAN 4, 10.0.4.1/24, DHCP .100–.254, DNS from the gateway, IPv6 none, UPnP off, isolation off, zone IoT
+  3. **Agent:** create network **IoT-Local**: VLAN 5, 10.0.5.1/24, same settings, zone IoT
+  4. **Agent:** policy "IoT: Internal to IoT", ALLOW, Internal any → IoT any, all protocols (segmentation.md rule 1; narrowed in step 5)
+  5. **Agent:** policy "IoT: gateway services", ALLOW, IoT any → Gateway, UDP 53, 67, 123, 5353 and TCP 53 (rule 3)
+  6. **Agent:** policy "IoT: block gateway", BLOCK, IoT any → Gateway any (rule 3). Must sit **below** policy 5; the order is read back before step 1 is closed, because reordering needs the API key too
+  7. **Agent:** policy "IoT-Local: no internet", BLOCK, IoT-Local network → External any, IPv4 and IPv6, scheduled to be active every day except 03:00–04:00 (rule 5, decision 1). The tool's preview shows whether one schedule can wrap midnight; if not, it is two policies, 00:00–03:00 and 04:00–24:00
+  8. **Owner:** mDNS proxy to Custom; networks main LAN, IoT-Cloud, IoT-Local; service HomeKit only
+  9. **Owner:** IPS protected networks add IoT-Cloud and IoT-Local; nothing else changes
+  - Not created, because the zone defaults should already do it: IoT → Internal block, IoT → External allow (IoT-Cloud), IoT → Containers block, IoT-Cloud ↔ IoT-Local block (rules 2, 4, 6, 7). Verify 3 confirms each one in the predefined policies; any that isn't already true becomes its own block policy before the window closes
+- Verify (read connection):
+  1. Both networks exist with the settings above and the IoT zone holds exactly those two
+  2. The four or five new policies exist, enabled, with "IoT: gateway services" ordered above "IoT: block gateway"
+  3. The predefined policies for the IoT zone show IoT → Internal, IoT → Containers and intra-zone as block, IoT → External as allow
+  4. IPS lists five networks; mode and categories unchanged; memory read after 1 hour and 24 hours, rolling back the IPS change if it stays above 90% (as A3)
+  5. No client changed network (the client list's network for every client is what it was at check 4)
+  6. HomeKit: every accessory reachable that was reachable before (home-automation plugin, read only). The mDNS change is the one part of step 1 that touches existing devices
+- Rollback: delete the policies, then the two networks (both empty), then the zone; mDNS back to what check 2 recorded; IPS back to three networks. The policies and networks are deletable from the UI if the write account's delete is off
+- Exact payloads and object IDs: `private/changes.md`, same date and title
+- Approved by / when: not yet
+
 ## 2026-11-05: Backlog B2 and B8 (smart devices to IoT VLANs by MAC; mDNS for HomeKit)
 - Status: **proposed** (design only; nothing written). Tier 2
 - Target: the gateway: two new networks (IoT-Cloud, IoT-Local) in a new IoT zone, seven zone policies, the site's mDNS proxy (Custom), IPS on both networks; then a per-client Virtual Network Override for each smart device
