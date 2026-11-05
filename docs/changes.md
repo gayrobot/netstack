@@ -14,6 +14,33 @@ Template:
 - Approved by / when:
 ```
 
+## 2026-11-05: Backlog A11 (NAS share clean-up)
+- Status: **closed 2026-11-05, done by the owner in DSM** (no agent write, no change window). Outcome: the one empty share was deleted by the owner and the agent's read connection confirmed it gone (13 shares remain); the world-writable finding wasn't reproduced; no stale NFS rule remains; DSM offers no uninstall for the three unused packages (button greyed out or missing, no error), so they stay. Earlier drafts below are kept as the record
+- Target: the NAS's shared folders, its NFS rules and its installed packages
+- Why: T2 and T4 in `strategy.md`. The 2026-10-21 audit found one world-writable share, some empty shares, a stale NFS rule and unused packages. The audit's specifics aren't in the repo, so this entry starts by re-reading them
+- Read so far (2026-11-05, read connection): 15 shared folders listed, each with a path, a writable flag and times. Share permissions, NFS rules and the package list all return **code 105 (no permission)**, because the read account isn't an admin. The agent can't see which share is world-writable, which are empty or which rule is stale
+- Owner's answers and agent reads (chat, 2026-11-05):
+  - **Share permissions (owner's screenshots).** Every folder has the same four entries: the agent's read account (Read), the agent's write account (Read & Write), the owner's account (Read & Write) and the `administrators` group (Read & Write). The two gateway-backup folders differ: the write account is **denied**, the backup job has Read, `administrators` has Read & Write. **No "everyone", guest or users-group entry on what was shown**, so the world-writable share isn't a share permission on those folders
+  - **Possible world-writable item (agent read, `list_directory /homes`):** the read account's own home folder is mode 777. That is a filesystem mode, not a share entry, and the likeliest match for the audit's finding. Unconfirmed; the audit's text isn't in the repo
+  - **Empty shares (agent read):** two shares list no files. A third empty one is gone: the owner deleted it on 2026-11-05 (the owner's own action, outside this entry; it was not read before it was deleted)
+  - **NFS:** only the share the app VM mounts has a rule: the app VM, read/write, root mapped to guest. That's in use, so it stays. No stale rule is left to remove (C4 narrows this one later)
+  - **Packages the owner doesn't use:** DSM Agent, SAN Manager, Synology AI Console. The read account can't list iSCSI LUNs or targets (code 105), so the owner confirms SAN Manager has none before it's removed
+- Checks still open (each blocks the step that depends on it):
+  1. **Owner:** `ls -ld` or File Station properties on the read account's home folder, to confirm mode 777, and whether anything needs it
+  2. **Owner:** SAN Manager shows no LUNs or targets
+  3. **Owner decides** whether the per-folder entry for the owner's account is dropped (it is only redundant if that account is in `administrators`; the read account can't show membership). The two agent accounts' entries are a different question: see "Not through this change" below
+  4. **Restore point:** `change-window.sh open` checks for a fresh one. Nothing here deletes data
+- Diff (draft, filled in after the checks):
+  - World-writable item: **no change needed** (owner's screenshot of the user-home share's permissions, 2026-11-05). The guest account, the backup accounts and the service accounts have No Access; the read account is Read Only; write is held only by the owner, the write account, the built-in administrator account (deactivated in A10) and one system account. There is no "everyone" or users-group entry. The 777 mode is a display artifact of the access list. The audit's world-writable finding is not reproduced on any share or home folder, so close it as not found. Left for tier 3: the write account's Read/Write on every user's home
+  - Empty shares: one of the two is the DSM user-home share, which isn't in the Shared Folder list and can't be removed; drop it from the change. Remove the other one only after the owner says nothing mounts it (the app VM mounts only the share with the NFS rule; SMB clients are unknown)
+  - Unused packages: the owner tried to uninstall DSM Agent, SAN Manager and Synology AI Console on 2026-11-05 and DSM refused (reason not yet recorded). Open: the exact message. Until then these stay
+  - Stale NFS rule: none left; dropped from this change
+- Not through this change (tier 3, the agent's own access): narrowing the write account's Read & Write from every folder to the ones a change needs, and the agent accounts' per-folder entries generally. Proposed for the owner to do in DSM
+- Noticed, not part of A11: Python2 is end-of-life and Node.js v18 is past support; both read as unused. The owner decides. QuickConnect is installed; A10 turned it off, not removed
+- Rollback: restore the folder mode; recreate a removed share from the values recorded in `private/changes.md`; reinstall a package from Package Center
+- Verify: the agent re-reads the share list; the app VM's `/data` mount is still mounted and writable; the gateway-backup job's next run succeeds
+- Approved by / when: pending. Needs chat approval of the final diff before `change-window.sh open`
+
 ## 2026-11-02: Backlog A8, A9, A10 (VPN peers, gateway admins, NAS accounts)
 - Status: **applied 2026-11-02** by the owner (tier 3: accounts and authentication are never changed through the agent. The agent read what it could and wrote the checklist; the owner checked and changed things in the UIs and answered in chat)
 - Target: the gateway's remote-user VPN and its peers; the gateway console's admin accounts and the owner's cloud account; the NAS's local accounts, 2FA and QuickConnect
