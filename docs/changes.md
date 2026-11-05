@@ -146,7 +146,7 @@ Template:
 
 ## 2026-11-02: Backlog A1, part 1 (new VPN provider and a second client container)
 - Status: proposed (tier 1 for the container work; tier 2 only if the new client's NFS folder needs a NAS share-permission change)
-- On hold (owner, in chat, 2026-11-02): the new provider account will be opened after the old provider's refund is processed. No approval has been given and no read-only checks have started. Ask the owner before resuming
+- Resumed 2026-11-05: the refund is processed and the new account is open; the owner approved part 1 in chat. Read-only checks 2026-11-05: the existing gateway container is unhealthy (old tunnel); the app VM's `/data` NFS mount is already rw and world-writable, so no share-permission change is needed
 - Target: app VM (VPN gateway container, a second gateway + client pair); the NAS download share (NFS mount only)
 - Why: A1. Move peer-to-peer downloads behind the VPN gateway with a provider that offers inbound port forwarding. The current provider has none. The owner chose a new provider on 2026-11-02 (name in `private/changes.md`) that offers it over WireGuard: the port is assigned at connect and the gateway container supports it natively. Both private trackers the owner uses were checked by the owner and allow VPN use. The refund from the current provider is likely but pending
 - Diff:
@@ -157,7 +157,9 @@ Template:
 - No gateway change in this part. The new containers sit on the existing container VLAN; the owner checks that the existing zone rules still fit
 - Verify (each gateway container): the exit IP is the new provider's and differs between the two; the forwarded port reads open from outside; the kill switch holds when the tunnel is stopped (no traffic leaves outside it); DNS doesn't leak; after a container restart the client's listening port matches the newly assigned one
 - Rollback: restore the old provider config in the first gateway container and restart; stop and remove the second pair; resume the original NAS client tasks (they aren't deleted until part 2 is verified)
-- Approved by / when: pending
+- Approved by / when: part 1 approved by the owner in chat, 2026-11-05 (part 2 not yet). Mapping (owner; names in `private/changes.md`): the first config goes to the existing gateway; the second goes to the new pair that replaces the NAS download client
+- Applied 2026-11-05 (container work, over SSH to the app VM, the owner approving each call): the existing gateway now runs on the new provider (custom WireGuard, pinned server, port forwarding, an up-command that sets the client's listening port); a second gateway and client pair added on the next free container-VLAN address. Keys went from the password manager to the VM's `.env` without being printed; the old provider's variables and an `.env` backup stay for rollback. One side change: the existing client's web-UI auth whitelist gained `127.0.0.1/32` (only the two containers share that loopback) so the up-command can call its API; the config was backed up first. Compose changes are two commits in the app VM's local compose repo
+- Verified 2026-11-05: both gateways healthy; each client's listening port equals its gateway's forwarded port, before and after a restart; the two tunnels' exit IPs differ from each other and from the home address; the gateways' firewall default policy is DROP in all chains (kill switch) and DNS resolves locally in each. Not yet done: the forwarded ports read open from outside; stopping a tunnel to watch traffic stop; a DNS-leak test page; moving the download tasks (owner, in the client UI)
 - Couldn't verify (parts 1 and 2):
   - The gateway container's current environment on the running container (not in tracked docs)
   - The exact up-command call into the client's web API and its auth on this instance
