@@ -3,3 +3,5 @@
 2026-10-31T22:25:55Z CLOSE
 2026-11-02T19:04:31Z OPEN  A3: IPS on every internal network | gate only | nas backup sha256:2dc5b82344f3 (11h old)
 2026-11-02T19:14:02Z CLOSE
+2026-11-05T16:24:03Z OPEN  A1: close NAS peer-port forwards | gate only | nas backup sha256:506338bf4a48 (8h old)
+2026-11-05T16:24:49Z CLOSE

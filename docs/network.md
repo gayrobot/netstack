@@ -25,7 +25,7 @@
 
 - External → Internal blocks everything new, IPv4 and IPv6, apart from the port forwards below. There are no custom IPv6 allow rules, so hosts with global IPv6 addresses aren't reachable from outside.
 - External → Gateway allows only WireGuard and IPv6 neighbor discovery/RA/DHCPv6.
-- **Two WAN port forwards (TCP+UDP, any source) to the NAS**, created around Oct 2024. The owner identified the client on 2026-10-31: they are the inbound peer port of a peer-to-peer download client built into the NAS OS. They reach that one listener, not DSM or the shares. Carried as accepted risk R1 in [strategy.md](strategy.md) until the client moves behind the VPN gateway container (backlog A1).
+- **Two WAN port forwards (TCP+UDP, any source) to the NAS**, created around Oct 2024. **Disabled 2026-11-05** (backlog A1 part 2; they stay in the controller as disabled rules, so rollback is a toggle). The owner identified the client on 2026-10-31: they are the inbound peer port of a peer-to-peer download client built into the NAS OS. They reach that one listener, not DSM or the shares. Carried as accepted risk R1 in [strategy.md](strategy.md) until the client moves behind the VPN gateway container (backlog A1).
 
 ## Findings
 
