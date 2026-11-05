@@ -78,4 +78,4 @@ The server exposes ten tools. From the code and schemas, not the docs:
 
 ## Addendum 2026-11-05 (owner)
 
-The owner reports that Apple's Home asks for authentication on the phone when an automation touches a lock. If so, the unattended-automation risk for locks is limited to what the owner confirms. A direct `homekit_accessories control` call is the remaining path, and it is gated only by the client prompt. Reported by the owner; not tested by the agent. Garage and alarm accessories weren't covered by the report.
+The owner reports that Apple's Home asks for authentication on the phone when an automation touches a lock. If so, the unattended-automation risk for locks is limited to what the owner confirms. A direct `homekit_accessories control` call is the remaining path, and it is gated only by the client prompt. Reported by the owner; not tested by the agent. The owner has no garage door or alarm in HomeKit (2026-11-05), so locks are the only security accessory in scope.
