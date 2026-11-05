@@ -42,7 +42,7 @@ Columns: **Threat** is from the strategy's threat table. **Tier** is from [chang
 |---|---|---|---|---|---|
 | C1 | NAS firewall: DSM, SMB and NFS from trusted and VPN only; auto-block on | T2 | owner | M | open |
 | C2 | NAS data protection: scheduled snapshots of the data shares, a quarterly scrub, an off-site backup; then a test restore of one share | T4 | owner | L | open; today one bad delete has no undo |
-| C3 | App VM: disable rpcbind (listening on all interfaces, not needed for NFSv4) | T1 | 1 | S | proposed 2026-10-26, pending |
+| C3 | App VM: disable rpcbind (listening on all interfaces, not needed for NFSv4) | T1 | 1 | S | proposed 2026-10-26, pending. **Parked by the owner 2026-11-05:** the VM's login name isn't known, and recovery needs a reboot that stops all containers. Do it the next time the owner is logged in to the VM; the two commands are in `changes.md` |
 | C4 | NFS export restricted to the app VM, root squashed (`sec=sys` trusts client-asserted UIDs) | T1, T3 | 2 | S | open |
 | C5 | App VM inventory account: a read-only Docker API proxy and a user with neither `docker` nor `sudo`, replacing the current root-equivalent account | T5 | 3 | M | open |
 | C6 | Containers: pin images by digest; bring the exited monitoring container back; fix or drop the allow rule that points at its unassigned IP | T3 | 2 / owner | M | open |
