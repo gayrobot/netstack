@@ -104,13 +104,13 @@ Step 1 is tier 2: its own `changes.md` entry, chat approval and change window. S
 
 ## How this keeps working after rollout
 
-A new device joins the house Wi-Fi and lands on the main LAN, like today. That is the one weakness of VNO: segmentation is opt-in per device. The daily check (and later the observer, O2) closes it: a client the controller hasn't seen before gets classified from what the read connections show (vendor prefix, hostname, the controller's device fingerprint, whether a matching accessory appeared in HomeKit, what it talks to) and the agent proposes "IoT-Local", "IoT-Cloud" or "stays". The owner sets the override from the proposal, a tier-1 move.
+A new device joins the house Wi-Fi and lands on the main LAN, like today. That is the one weakness of VNO: segmentation is opt-in per device. The daily check (and later the observer, O2) closes it: a client the controller hasn't seen before gets classified from what the read connections show (vendor prefix, hostname, the controller's device fingerprint, whether a matching accessory appeared in HomeKit, what it talks to) and the agent proposes "IoT-Local", "IoT-Cloud" or "stays". A client nobody can name is proposed for IoT-Cloud, as decision 3 did. The owner sets the override from the proposal, a tier-1 move.
 
 ## Decisions for the owner
 
 1. **Updates on IoT-Local:** decided 2026-11-05, the daily 03:00–04:00 window.
 2. **Thermostats and the lighting bridge:** decided 2026-11-05, IoT-Local.
-3. **Clients the agent couldn't identify** (listed in `private/segmentation-devices.md`, with what is known about each). **Open.** Each stays on the main LAN until named.
+3. **Clients the agent couldn't identify:** decided 2026-11-05. The owner named two, and they join their classes. The two nobody could name go to **IoT-Cloud as containment**: they keep their internet, so whatever they do keeps working, but they lose the LAN. A device that misbehaves after the move identifies itself. Details in `private/segmentation-devices.md`.
 4. **Tier for a single-client move:** decided 2026-11-05, tier 1. A change to these controls, so the owner's call (tier 3); recorded in CLAUDE.md rules 1 and 5 and in [change-control.md](change-control.md).
 
 ## Couldn't verify
