@@ -75,3 +75,7 @@ The server exposes ten tools. From the code and schemas, not the docs:
 - Anything about the published artifact's origin: the plugin has no attestation, so provenance rests on the git commit and the author's repository.
 - Whether the App Store binary matches the source in the repo.
 - Which accessories are locks, cameras or garage, since the exact inventory stays in `private/`. The allowlist condition needs that list.
+
+## Addendum 2026-11-05 (owner)
+
+The owner reports that Apple's Home asks for authentication on the phone when an automation touches a lock. If so, the unattended-automation risk for locks is limited to what the owner confirms. A direct `homekit_accessories control` call is the remaining path, and it is gated only by the client prompt. Reported by the owner; not tested by the agent. Garage and alarm accessories weren't covered by the report.
