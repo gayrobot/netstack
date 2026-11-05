@@ -15,7 +15,7 @@ Template:
 ```
 
 ## 2026-11-05: Backlog A11 (NAS share clean-up)
-- Status: proposed. Tier 2 (share permissions); nothing is applied. The list of what to change isn't final: the checks below decide it, and **the write waits until each check is done or the owner waives it in chat**
+- Status: **closed 2026-11-05, done by the owner in DSM** (no agent write, no change window). Outcome: the one empty share was deleted by the owner and the agent's read connection confirmed it gone (13 shares remain); the world-writable finding wasn't reproduced; no stale NFS rule remains; DSM offers no uninstall for the three unused packages (button greyed out or missing, no error), so they stay. Earlier drafts below are kept as the record
 - Target: the NAS's shared folders, its NFS rules and its installed packages
 - Why: T2 and T4 in `strategy.md`. The 2026-10-21 audit found one world-writable share, some empty shares, a stale NFS rule and unused packages. The audit's specifics aren't in the repo, so this entry starts by re-reading them
 - Read so far (2026-11-05, read connection): 15 shared folders listed, each with a path, a writable flag and times. Share permissions, NFS rules and the package list all return **code 105 (no permission)**, because the read account isn't an admin. The agent can't see which share is world-writable, which are empty or which rule is stale
