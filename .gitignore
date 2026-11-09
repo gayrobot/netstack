@@ -15,6 +15,7 @@ raw/
 
 # Local Claude Code settings
 .claude/settings.local.json
+GEMINI.md
 
 # OS / editor
 .DS_Store
