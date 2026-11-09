@@ -1,6 +1,6 @@
 # Segmentation: smart devices off the main LAN, by MAC, on the same Wi-Fi
 
-**Status:** proposed 2026-11-05, not applied. **Backlog:** replaces the plan in B2, B5, B7 and B8. **Tier:** 2 for every write below (rule 1: VLANs and firewall).
+**Status:** proposed 2026-11-05, not applied. **Backlog:** replaces the plan in B2, B5, B7 and B8. **Tier:** 2 for creating the networks, zone, policies and mDNS scope (step 1); 1 for moving one client into an existing IoT network or back (owner, 2026-11-05).
 
 ## What the owner asked for
 
@@ -54,7 +54,7 @@ The gateway's zone firewall is stateful, so a reply to a connection the LAN star
 | 2 | IoT → Internal | block new connections; replies allowed. Exceptions only per integration (see "Callbacks" below) |
 | 3 | IoT → Gateway | allow DHCP, DNS, NTP and mDNS (UDP 67, 53, 123, 5353); block the rest, including the gateway's admin UI |
 | 4 | IoT-Cloud → External | allow |
-| 5 | IoT-Local → External | **block** (source = the IoT-Local network) |
+| 5 | IoT-Local → External | **block** (source = the IoT-Local network), except a daily 03:00–04:00 window for firmware updates (decision 1) |
 | 6 | IoT → Containers, Vpn, Hotspot | block |
 | 7 | IoT-Cloud ↔ IoT-Local | block (routed traffic between the two) |
 
@@ -75,7 +75,7 @@ This is A4, done where it belongs (owner's call, 2026-11-02).
 
 Matter devices (and HomeKit over IPv6) talk over IPv6 link-local and the hubs' private (ULA) prefix. The read on 2026-11-05 shows the hubs advertising that prefix on the main LAN, and other devices taking addresses from it. Neither crosses a VLAN boundary: the mDNS proxy would announce the device, and the hub couldn't reach it. So **a Wi-Fi Matter device stays on the main LAN** until the IoT networks get routed IPv6, which is its own decision. The owner checks each HomeKit Wi-Fi device in the Home app (accessory settings show a "Matter" section if it is one) before it's moved.
 
-## The trade-off the owner has to decide
+## The update trade-off (decided 2026-11-05: option 1)
 
 IoT-Local has no internet, so its devices **can't update their own firmware**. That conflicts with the owner's call that everything updates itself (2026-11-02). Three ways out:
 
@@ -83,18 +83,18 @@ IoT-Local has no internet, so its devices **can't update their own firmware**. T
 2. **No internet, no updates.** Simplest and tightest. The plugs and lamps on IoT-Local rarely get updates anyway, and a device that can't reach its vendor can't be told to do anything by it either.
 3. **Everything that wants updates goes to IoT-Cloud.** Then IoT-Local is nearly empty and the split is mostly theatre.
 
-The thermostats and the lighting bridge are the devices where this matters most: they get real firmware updates, and their vendors' apps (remote access, schedules, weather) stop working without internet even though HomeKit keeps working. Default in this design: they go to IoT-Local under option 1. If the owner wants the vendor apps, they go to IoT-Cloud instead.
+The thermostats and the lighting bridge are the devices where this matters most: they get real firmware updates, and their vendors' apps (remote access, schedules, weather) stop working without internet even though HomeKit keeps working. **Owner, 2026-11-05: option 1, and the thermostats and the lighting bridge go to IoT-Local.** Their vendor apps lose remote access; HomeKit keeps working, and the daily window keeps their firmware current.
 
 ## Rollout
 
-Each step is its own `changes.md` entry and change window. Nothing in step 2 or later starts until the step before has been verified.
+Step 1 is tier 2: its own `changes.md` entry, chat approval and change window. Steps 2–4 are single-client moves, tier 1 (owner, 2026-11-05): the owner approves each call and each move is logged in `changes.md` afterwards, with no change window. The tier covers moving one client between the main LAN and an IoT network that already exists, nothing else; a new network, zone, policy or mDNS change is still tier 2. Nothing in step 2 or later starts until the step before has been verified.
 
 | Step | What | Who | Verified when |
 |---|---|---|---|
 | 0 | This design; the owner answers the decisions below | agent, owner | merged |
 | 1 | Create IoT-Cloud and IoT-Local, the IoT zone, policies 1–7, mDNS Custom, IPS on both. **No clients moved** | agent (write connection, tier 2) | read connection shows both networks, the zone and every policy; nothing changed for any client |
 | 2 | Pilot: one arcade-cabinet plug to IoT-Local, one robot vacuum to IoT-Cloud | owner sets the override; agent reconnects the client and verifies | the plug shows up in IoT-Local in UniFi **and** HomeKit reports it reachable (read through the home-automation plugin), and the owner toggles it from a phone on the main LAN and from cellular; the vacuum's app works from cellular; no new blocked flows from either after 48 hours except the expected internet blocks from the plug |
-| 3 | The rest of IoT-Cloud, one change window | owner + agent | each client in IoT-Cloud; each app works from cellular |
+| 3 | The rest of IoT-Cloud, one sitting | owner + agent | each client in IoT-Cloud; each app works from cellular |
 | 4 | The rest of IoT-Local, plugs and lamps first, the lighting bridge last (it carries ~50 accessories) | owner + agent | every moved accessory reachable in HomeKit; home-automation integrations updated for any that were pinned to an IP |
 | 5 | Narrow rule 1 from "allow all" to the hubs, the phones' network and the home-automation host, once a week of flows shows what's used | agent | |
 
@@ -104,14 +104,14 @@ Each step is its own `changes.md` entry and change window. Nothing in step 2 or 
 
 ## How this keeps working after rollout
 
-A new device joins the house Wi-Fi and lands on the main LAN, like today. That is the one weakness of VNO: segmentation is opt-in per device. The daily check (and later the observer, O2) closes it: a client the controller hasn't seen before gets classified from what the read connections show (vendor prefix, hostname, the controller's device fingerprint, whether a matching accessory appeared in HomeKit, what it talks to) and the agent proposes "IoT-Local", "IoT-Cloud" or "stays". The owner sets the override from the proposal. That's a tier-2 write each time under today's rules; whether a single-device override should be tier 1 once the networks exist is decision 4.
+A new device joins the house Wi-Fi and lands on the main LAN, like today. That is the one weakness of VNO: segmentation is opt-in per device. The daily check (and later the observer, O2) closes it: a client the controller hasn't seen before gets classified from what the read connections show (vendor prefix, hostname, the controller's device fingerprint, whether a matching accessory appeared in HomeKit, what it talks to) and the agent proposes "IoT-Local", "IoT-Cloud" or "stays". A client nobody can name is proposed for IoT-Cloud, as decision 3 did. The owner sets the override from the proposal, a tier-1 move.
 
 ## Decisions for the owner
 
-1. **Updates on IoT-Local:** the daily window (recommended), no updates, or send them to IoT-Cloud.
-2. **Thermostats and the lighting bridge:** IoT-Local (HomeKit only, recommended) or IoT-Cloud (keeps the vendor apps).
-3. **Clients the agent couldn't identify** (listed in `private/segmentation-devices.md`, with what is known about each). Each stays on the main LAN until named.
-4. **Tier for a single-device override** once the networks and policies exist: stay tier 2 (default), or tier 1 like a DHCP reservation. Changing a tier is changing these controls, so it's tier 3: the owner decides, the agent doesn't.
+1. **Updates on IoT-Local:** decided 2026-11-05, the daily 03:00–04:00 window.
+2. **Thermostats and the lighting bridge:** decided 2026-11-05, IoT-Local.
+3. **Clients the agent couldn't identify:** decided 2026-11-05. The owner named two, and they join their classes. The two nobody could name go to **IoT-Cloud as containment**: they keep their internet, so whatever they do keeps working, but they lose the LAN. A device that misbehaves after the move identifies itself. Details in `private/segmentation-devices.md`.
+4. **Tier for a single-client move:** decided 2026-11-05, tier 1. A change to these controls, so the owner's call (tier 3); recorded in CLAUDE.md rules 1 and 5 and in [change-control.md](change-control.md).
 
 ## Couldn't verify
 
