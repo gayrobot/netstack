@@ -14,6 +14,21 @@ Template:
 - Approved by / when:
 ```
 
+## 2026-11-11: Retired Raspberry Pi from the server VLAN to the main LAN
+- Status: **applied and verified** 2026-11-11. Tier 2 (a VLAN change for one client outside the IoT carve-out in rule 5). The first `change-window.sh open` was blocked because the NAS's self-signed certificate had been regenerated on 2026-11-10 and no longer matched the pin; the owner checked it and updated the pin (tier 3), and the gate then passed
+- Target: one wired Raspberry Pi on the 8-port PoE switch, today on the server VLAN at its `.3` address. Once the first DNS filter host, now running DJ-link tooling
+- Why: owner, 2026-11-11: the Pi is no longer a server device; it belongs on the same network as the DJ gear (an AlphaTheta unit, which the read connection shows on the main LAN)
+- Current state (read connection, 2026-11-11): the client has a Virtual Network Override to the server VLAN and a fixed-IP reservation at `.3`; online, wired. It is the only live client on the server VLAN
+- Diff, in order:
+  1. **Agent, write connection:** clear the fixed-IP reservation (`unifi_set_client_ip_settings`, fixed IP off). The `.3` address doesn't exist on the main LAN
+  2. **Owner, UI:** turn off the client's Virtual Network Override (the MCP has no tool for it; [segmentation.md](segmentation.md))
+  3. **Owner:** unplug and replug the Pi (or reboot it) so it takes a main-LAN lease
+- Verify (read connection): the client's network is the main LAN, with a main-LAN address from the pool, no override and no reservation; it is online and the AlphaTheta unit is unchanged
+- Result (read connection, 2026-11-11): reservation cleared by the agent (one approved write call), override cleared and the Pi replugged by the owner. The first replug landed a few seconds before the override cleared, so the Pi held a server-VLAN lease on the main LAN with no working IPv4; a second replug fixed it. Now on the main LAN with an address from the pool, no override, no reservation, online and answering ping from the admin laptop. The AlphaTheta unit is unchanged (main LAN, online)
+- Rollback: override back to the server VLAN, reservation back to `.3`, replug
+- Not changed: the server VLAN's DHCP still hands out `.3` and `.4` as DNS servers. With no clients left there it doesn't matter today; noted for later
+- Approved by / when: owner, in chat, 2026-11-11
+
 ## 2026-11-05: Backlog B2, segmentation step 1 (create the IoT networks, zone and policies; no clients moved)
 - Status: **proposed**, waiting for chat approval. Tier 2
 - Target: the gateway. Two new networks, one new zone, user-defined zone policies, the site mDNS proxy, the IPS network list. No client changes
